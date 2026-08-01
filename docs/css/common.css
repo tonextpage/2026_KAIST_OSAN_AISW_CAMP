@@ -1,0 +1,360 @@
+/* ==========================================
+   Google Fonts
+========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+
+
+/* ==========================================
+   Variables
+========================================== */
+
+:root {
+
+    --kaist-blue: #003e7e;
+    --kaist-light: #1f6fba;
+
+    --background: #f6f8fb;
+
+    --card: #ffffff;
+
+    --text: #1d1d1f;
+
+    --subtext: #666666;
+
+    --border: #e7e7e7;
+
+    --shadow:
+        0 12px 32px rgba(0,0,0,.08);
+
+    --radius: 18px;
+
+    --transition: .25s ease;
+
+}
+
+
+/* ==========================================
+   Reset
+========================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+
+    scroll-behavior:smooth;
+
+}
+
+body{
+
+    font-family:"Pretendard",sans-serif;
+
+    background:var(--background);
+
+    color:var(--text);
+
+    line-height:1.7;
+
+}
+
+
+/* ==========================================
+   Links
+========================================== */
+
+a{
+
+    color:inherit;
+
+    text-decoration:none;
+
+}
+
+a:hover{
+
+    text-decoration:none;
+
+}
+
+
+/* ==========================================
+   Images
+========================================== */
+
+img{
+
+    display:block;
+
+    width:100%;
+
+    height:auto;
+
+}
+
+
+/* ==========================================
+   Navbar
+========================================== */
+
+.navbar{
+
+    backdrop-filter:blur(12px);
+
+    background:rgba(20,20,20,.92)!important;
+
+}
+
+
+/* ==========================================
+   Hero
+========================================== */
+
+.hero{
+
+    position:relative;
+
+    min-height:100vh;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    overflow:hidden;
+
+    color:white;
+
+}
+
+.hero::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+
+        linear-gradient(
+
+            rgba(0,0,0,.55),
+
+            rgba(0,0,0,.55)
+
+        ),
+
+        url("../assets/backgrounds/hero.jpg");
+
+    background-size:cover;
+
+    background-position:center;
+
+    z-index:-2;
+
+}
+
+.hero::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+
+        radial-gradient(
+
+            circle at top,
+
+            rgba(255,255,255,.12),
+
+            transparent 60%
+
+        );
+
+    z-index:-1;
+
+}
+
+.hero h1{
+
+    font-weight:800;
+
+    letter-spacing:-1px;
+
+}
+
+.hero p{
+
+    max-width:760px;
+
+    margin:auto;
+
+    opacity:.95;
+
+}
+
+
+/* ==========================================
+   Section
+========================================== */
+
+section{
+
+    padding-top:80px;
+
+    padding-bottom:80px;
+
+}
+
+
+/* ==========================================
+   Card
+========================================== */
+
+.card{
+
+    border:none;
+
+    border-radius:var(--radius);
+
+    overflow:hidden;
+
+    transition:var(--transition);
+
+    box-shadow:var(--shadow);
+
+}
+
+.card:hover{
+
+    transform:
+
+        translateY(-8px);
+
+    box-shadow:
+
+        0 20px 50px rgba(0,0,0,.16);
+
+}
+
+
+/* ==========================================
+   Button
+========================================== */
+
+.btn-primary{
+
+    background:var(--kaist-blue);
+
+    border:none;
+
+}
+
+.btn-primary:hover{
+
+    background:var(--kaist-light);
+
+}
+
+.btn-outline-primary{
+
+    color:var(--kaist-blue);
+
+    border-color:var(--kaist-blue);
+
+}
+
+.btn-outline-primary:hover{
+
+    background:var(--kaist-blue);
+
+}
+
+
+/* ==========================================
+   Badge
+========================================== */
+
+.badge{
+
+    font-size:.82rem;
+
+    padding:.55em .8em;
+
+    border-radius:999px;
+
+}
+
+
+/* ==========================================
+   Footer
+========================================== */
+
+footer{
+
+    margin-top:120px;
+
+}
+
+
+/* ==========================================
+   Utilities
+========================================== */
+
+.shadow-soft{
+
+    box-shadow:var(--shadow);
+
+}
+
+.rounded-xl{
+
+    border-radius:var(--radius);
+
+}
+
+.text-muted{
+
+    color:var(--subtext)!important;
+
+}
+
+
+/* ==========================================
+   Responsive
+========================================== */
+
+@media (max-width:768px){
+
+    .hero{
+
+        min-height:75vh;
+
+        padding:80px 20px;
+
+    }
+
+    .hero h1{
+
+        font-size:2.4rem;
+
+    }
+
+    .hero p{
+
+        font-size:1rem;
+
+    }
+
+}

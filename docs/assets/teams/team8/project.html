@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 스마트 뉴스 검색</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    :root {
+      --primary-color: #1e40af; /* 짙지만 약간 연한 딥 블루 */
+      --primary-hover: #1d4ed8;
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      /* 하단 연한 초록 이미지/그라데이션 세팅 */
+      background: linear-gradient(180deg, #f1f5f9 60%, #e8f5e9 100%),
+                  url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%20a7f3d0' fill-opacity='0.15' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+      background-attachment: fixed;
+      color: var(--text-main);
+      padding: 20px 10px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 20px auto;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 25px;
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* 상단 메인 타이틀 (짙지만 살짝 연한 블루) */
+    .title-main {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* AISW & CAMP 픽셀 느낌 서브 타이틀 영역 */
+    .title-sub-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .pixel-text {
+      font-family: 'Press Start 2P', monospace, monospace;
+      font-size: 13px;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 4px 8px;
+      border-radius: 4px;
+      box-shadow: 2px 2px 0px #0284c7;
+      display: inline-block;
+      text-shadow: 1px 1px 0px #000;
+    }
+
+    .pixel-camp {
+      background: #065f46;
+      color: #34d399;
+      box-shadow: 2px 2px 0px #059669;
+    }
+
+    .tab-menu {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .menu-toggle {
+      font-size: 14px;
+      cursor: pointer;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-weight: bold;
+    }
+
+    .filter-box {
+      display: none;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .filter-group { margin-bottom: 15px; }
+    .filter-group:last-child { margin-bottom: 0; }
+
+    .filter-group-title {
+      display: inline-block;
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-main);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .filter-group-title:hover { background: #e2e8f0; }
+
+    .filter-btn {
+      padding: 6px 12px;
+      margin: 3px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover { background: #f1f5f9; }
+
+    .filter-btn.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .selected-tags {
+      margin-bottom: 15px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag-chip {
+      background: #e0e7ff;
+      color: #4338ca;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .search-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    input {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      font-size: 14px;
+      outline: none;
+    }
+
+    #regionInput { flex: 2; min-width: 150px; }
+    #dateInput { flex: 1; min-width: 130px; }
+
+    .search-btn {
+      padding: 12px 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .history-section {
+      margin-bottom: 20px;
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .history-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .history-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      color: var(--text-main);
+    }
+
+    .history-keyword {
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .history-keyword:hover { color: var(--primary-color); }
+
+    .history-date {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .history-del-btn {
+      cursor: pointer;
+      color: #ef4444;
+      font-weight: bold;
+      margin-left: 2px;
+      font-size: 11px;
+    }
+
+    .history-del-btn:hover { color: #b91c1c; }
+
+    .news-card {
+      margin-top: 15px;
+      background: white;
+      padding: 18px;
+      border: 1px solid var(--border-color);
+      border-left: 5px solid var(--primary-color);
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .news-date { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+
+    .news-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-decoration: none;
+      display: block;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .news-title:hover { color: var(--primary-color); }
+
+    .action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn-small {
+      padding: 6px 12px;
+      border: 1px solid var(--border-color);
+      background: #f8fafc;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-small:hover { background: #e2e8f0; }
+
+    .summary-box {
+      display: none;
+      background: #fff7ed;
+      border: 1px solid #ffedd5;
+      padding: 16px;
+      margin-top: 12px;
+      line-height: 1.8;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .summary-box ul {
+      margin: 6px 0 10px 0;
+      padding-left: 18px;
+    }
+
+    .summary-box li {
+      margin-bottom: 4px;
+    }
+
+    .no-result { text-align: center; padding: 40px 0; color: var(--text-muted); line-height: 1.6; }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="header">
+      <div class="title-group">
+        <h1 class="title-main">📍 AI 스마트 뉴스 검색</h1>
+        <div class="title-sub-row">
+          <span class="pixel-text">AISW</span>
+          <span class="pixel-text pixel-camp">CAMP</span>
+        </div>
+      </div>
+      <button class="menu-toggle" onclick="toggleFilter()">⚙️ 카테고리 필터</button>
+    </div>
+
+    <div class="tab-menu">
+      <button class="tab-btn active" onclick="switchTab('search')">🔍 검색</button>
+      <button class="tab-btn" onclick="switchTab('bookmarks')">⭐ 스크랩 보관함 (<span id="bookmarkCount">0</span>)</button>
+    </div>
+
+    <!-- 카테고리 필터 영역 -->
+    <div id="filterBox" class="filter-box">
+      <!-- 정치 그룹 -->
+      <div class="filter-group">
+        <div class="filter-group-title filter-btn" data-filter="정치">🏛️ 정치 (전체)</div>
+        <div>
+          <button class="filter-btn" data-filter="행정">행정</button>
+          <button class="filter-btn" data-filter="외교">외교</button>
+          <button class="filter-btn" data-filter="국회">국회</button>
+        </div>
+      </div>
+
+      <!-- 경제 그룹 -->
+      <div class="filter-group">
+        <div class="filter-group-title filter-btn" data-filter="경제">📈 경제 (전체)</div>
+        <div>
+          <button class="filter-btn" data-filter="삼성전자">삼성전자</button>
+          <button class="filter-btn" data-filter="환율">환율</button>
+        </div>
+      </div>
+
+      <!-- 스포츠 그룹 -->
+      <div class="filter-group">
+        <div class="filter-group-title filter-btn" data-filter="스포츠">⚽ 스포츠 (전체)</div>
+        <div>
+          <button class="filter-btn" data-filter="축구">축구</button>
+          <button class="filter-btn" data-filter="야구">야구</button>
+          <button class="filter-btn" data-filter="농구">농구</button>
+          <button class="filter-btn" data-filter="골프">골프</button>
+          <button class="filter-btn" data-filter="e스포츠">e스포츠</button>
+          <button class="filter-btn" data-filter="배구">배구</button>
+          <button class="filter-btn" data-filter="탁구">탁구</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="selected-tags" id="selectedTagsDisplay">
+      <span>선택된 필터:</span> <span style="color:#94a3b8;">없음 (전체 검색)</span>
+    </div>
+
+    <div id="searchSection">
+      <div class="search-form">
+        <input id="regionInput" type="text" placeholder="지역명 또는 검색어 입력 (예: 서울, 대전)">
+        <input id="dateInput" type="date">
+        <button class="search-btn" onclick="searchNews()">검색</button>
+      </div>
+
+      <div class="history-section" id="historySection">
+        <div class="history-title">🕒 최근 검색 기록</div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+
+    <div id="newsList"></div>
+
+  </div>
+
+  <script>
+    let selectedFilters = new Set();
+    let currentTab = "search";
+    let lastSearchResults = [];
+
+    const placeholders = {
+      "정치": "검색어 입력 (예: 정치, 선거 등)",
+      "행정": "검색어 입력 (예: 행정)",
+      "외교": "검색어 입력 (예: 외교)",
+      "국회": "검색어 입력 (예: 국회)",
+      "경제": "기업명 또는 경제 키워드 입력",
+      "삼성전자": "검색어 입력 (예: 삼성전자, 주식 등)",
+      "환율": "검색어 입력 (예: 환율, 원달러 등)",
+      "스포츠": "지역명 또는 관련 키워드 입력",
+      "야구": "야구선수 이름/구단 입력 (예: 류현진, KIA)",
+      "축구": "축구선수 이름 입력 (예: 손흥민, 이강인)",
+      "농구": "농구 팀/선수 입력 (예: KBL, NBA)",
+      "골프": "골프 선수/대회 입력",
+      "e스포츠": "게임명/선수명 입력 (예: T1, 페이커)",
+      "배구": "배구 팀/선수 입력",
+      "탁구": "탁구 선수/대회 입력"
+    };
+
+    updateBookmarkCount();
+    renderSearchHistory();
+
+    function toggleFilter() {
+      const box = document.getElementById("filterBox");
+      box.style.display = (box.style.display === "block") ? "none" : "block";
+    }
+
+    document.querySelectorAll(".filter-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        const filterVal = button.dataset.filter;
+
+        if (selectedFilters.has(filterVal)) {
+          selectedFilters.delete(filterVal);
+          button.classList.remove("active");
+        } else {
+          selectedFilters.add(filterVal);
+          button.classList.add("active");
+        }
+
+        updateSelectedTagsUI();
+        updatePlaceholder();
+      });
+    });
+
+    function updatePlaceholder() {
+      const input = document.getElementById("regionInput");
+      const filterArray = Array.from(selectedFilters);
+
+      if (filterArray.length === 0) {
+        input.placeholder = "지역명 또는 검색어 입력 (예: 서울, 대전)";
+      } else {
+        const lastSelected = filterArray[filterArray.length - 1];
+        input.placeholder = placeholders[lastSelected] || `검색어 입력 (예: ${lastSelected})`;
+      }
+    }
+
+    function updateSelectedTagsUI() {
+      const display = document.getElementById("selectedTagsDisplay");
+      if (selectedFilters.size === 0) {
+        display.innerHTML = `<span>선택된 필터:</span> <span style="color:#94a3b8;">없음 (전체 검색)</span>`;
+      } else {
+        const tagsHtml = Array.from(selectedFilters)
+          .map(tag => `<span class="tag-chip">${tag}</span>`)
+          .join(" ");
+        display.innerHTML = `<span>선택된 필터:</span> ${tagsHtml}`;
+      }
+    }
+
+    document.getElementById("regionInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") searchNews();
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const buttons = document.querySelectorAll(".tab-btn");
+      buttons[0].classList.toggle("active", tab === 'search');
+      buttons[1].classList.toggle("active", tab === 'bookmarks');
+
+      document.getElementById("searchSection").style.display = (tab === 'search') ? "block" : "none";
+
+      if (tab === 'search') {
+        renderNews(lastSearchResults);
+      } else {
+        renderBookmarks();
+      }
+    }
+
+    function getSearchHistory() {
+      return JSON.parse(localStorage.getItem("newsSearchHistory") || "[]");
+    }
+
+    function saveSearchHistory(region, filterStr) {
+      let history = getSearchHistory();
+      const now = new Date();
+      const timeStr = `${now.getMonth() + 1}.${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const queryText = filterStr ? `${region || '전체'} (${filterStr})` : region;
+
+      history = history.filter(item => item.query !== queryText);
+      history.unshift({
+        id: Date.now(),
+        query: queryText,
+        region: region,
+        time: timeStr
+      });
+
+      if (history.length > 8) history.pop();
+
+      localStorage.setItem("newsSearchHistory", JSON.stringify(history));
+      renderSearchHistory();
+    }
+
+    function removeSearchHistory(id, e) {
+      e.stopPropagation();
+      let history = getSearchHistory().filter(item => item.id !== id);
+      localStorage.setItem("newsSearchHistory", JSON.stringify(history));
+      renderSearchHistory();
+    }
+
+    function renderSearchHistory() {
+      const history = getSearchHistory();
+      const listContainer = document.getElementById("historyList");
+      const section = document.getElementById("historySection");
+
+      if (history.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      listContainer.innerHTML = "";
+
+      history.forEach(item => {
+        listContainer.innerHTML += `
+          <div class="history-item">
+            <span class="history-keyword" onclick="quickSearch('${escapeQuotes(item.region)}')">${item.query}</span>
+            <span class="history-date">${item.time}</span>
+            <span class="history-del-btn" onclick="removeSearchHistory(${item.id}, event)">❌</span>
+          </div>
+        `;
+      });
+    }
+
+    function quickSearch(region) {
+      document.getElementById("regionInput").value = region || "";
+      searchNews();
+    }
+
+    async function fetchRssData(keyword) {
+      const rss = `https://news.google.com/rss/search?q=${encodeURIComponent(keyword)}&hl=ko&gl=KR&ceid=KR:ko`;
+      const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`);
+      return await response.json();
+    }
+
+    async function searchNews() {
+      let region = document.getElementById("regionInput").value.trim();
+      const date = document.getElementById("dateInput").value;
+      const list = document.getElementById("newsList");
+
+      if (!region && selectedFilters.size === 0) {
+        alert("검색어를 입력하거나 카테고리 필터를 선택해 주세요!");
+        return;
+      }
+
+      saveSearchHistory(region, Array.from(selectedFilters).join(", "));
+      list.innerHTML = `<div class="no-result">🔍 최신 뉴스를 불러오는 중입니다...</div>`;
+
+      const queryKeywords = [];
+
+      if (region) {
+        queryKeywords.push(region);
+      }
+
+      selectedFilters.forEach(filter => {
+        if (filter === "삼성전자") {
+          if (!region.includes("삼성전자")) {
+            queryKeywords.push("삼성전자 주식");
+          } else {
+            queryKeywords.push("주식 주가");
+          }
+        } else if (filter === "환율") {
+          if (!region.includes("환율")) {
+            queryKeywords.push("환율");
+          }
+        } else {
+          if (!region.includes(filter)) {
+            queryKeywords.push(filter);
+          }
+        }
+      });
+
+      if (date) queryKeywords.push(date);
+
+      const keyword = queryKeywords.join(" ");
+
+      try {
+        let data = await fetchRssData(keyword);
+
+        if ((!data.items || data.items.length === 0) && selectedFilters.size > 0) {
+          const fallbackKeyword = Array.from(selectedFilters).join(" ");
+          data = await fetchRssData(fallbackKeyword);
+        }
+
+        if (!data.items || data.items.length === 0) {
+          list.innerHTML = `<div class="no-result">🔍 검색 결과가 없습니다. 다른 키워드로 검색해 보세요.</div>`;
+          lastSearchResults = [];
+          return;
+        }
+
+        lastSearchResults = data.items.slice(0, 10);
+        renderNews(lastSearchResults);
+
+      } catch (error) {
+        list.innerHTML = `<div class="no-result">뉴스를 불러오는데 실패했습니다. 네트워크 상태를 확인해 주세요.</div>`;
+      }
+    }
+
+    function renderNews(items) {
+      const list = document.getElementById("newsList");
+      list.innerHTML = "";
+
+      if (items.length === 0) {
+        list.innerHTML = `<div class="no-result">검색어를 입력하고 검색 버튼을 눌러주세요.</div>`;
+        return;
+      }
+
+      const bookmarks = getBookmarks();
+
+      items.forEach((item, idx) => {
+        const d = new Date(item.pubDate);
+        const koreanDate = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+        const isBookmarked = bookmarks.some(b => b.link === item.link);
+        const safeTitle = escapeQuotes(item.title);
+
+        list.innerHTML += `
+          <div class="news-card">
+            <div class="news-date">📅 ${koreanDate}</div>
+            <a class="news-title" href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a>
+            <div class="action-btns">
+              <button class="btn-small" onclick="toggleAiSummary(this, '${safeTitle}')">🤖 AI 요약</button>
+              <button class="btn-small" onclick="speakText('${safeTitle}')">🔊 읽기</button>
+              <button class="btn-small" onclick="toggleBookmark(${idx})">
+                ${isBookmarked ? '⭐ 저장됨' : '☆ 스크랩'}
+              </button>
+            </div>
+            <div class="summary-box"></div>
+          </div>
+        `;
+      });
+    }
+
+    function toggleAiSummary(btn, title) {
+      const card = btn.closest('.news-card');
+      const box = card.querySelector('.summary-box');
+
+      if (box.style.display === "block") {
+        box.style.display = "none";
+        btn.innerText = "🤖 AI 요약";
+        return;
+      }
+
+      box.style.display = "block";
+      box.innerHTML = "🤖 AI가 요약 중입니다...";
+      btn.innerText = "🤖 AI 요약 닫기";
+
+      setTimeout(() => {
+        box.innerHTML = `
+          <strong>📌 AI 핵심 요약</strong>
+          <ul>
+            <li>${title}</li>
+            <li>해당 뉴스는 최신 주요 이슈 및 상세 소식을 전하고 있습니다.</li>
+          </ul>
+        `;
+      }, 300);
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function getBookmarks() {
+      return JSON.parse(localStorage.getItem("newsBookmarks") || "[]");
+    }
+
+    function toggleBookmark(idx) {
+      const item = lastSearchResults[idx];
+      let bookmarks = getBookmarks();
+      const existingIdx = bookmarks.findIndex(b => b.link === item.link);
+
+      if (existingIdx > -1) {
+        bookmarks.splice(existingIdx, 1);
+      } else {
+        bookmarks.push(item);
+      }
+
+      localStorage.setItem("newsBookmarks", JSON.stringify(bookmarks));
+      updateBookmarkCount();
+
+      if (currentTab === 'search') renderNews(lastSearchResults);
+      else renderBookmarks();
+    }
+
+    function renderBookmarks() {
+      const bookmarks = getBookmarks();
+      const list = document.getElementById("newsList");
+      list.innerHTML = "";
+
+      if (bookmarks.length === 0) {
+        list.innerHTML = `<div class="no-result">저장된 항목이 없습니다.</div>`;
+        return;
+      }
+
+      bookmarks.forEach((item) => {
+        const d = new Date(item.pubDate);
+        const koreanDate = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+
+        list.innerHTML += `
+          <div class="news-card">
+            <div class="news-date">📰 보관된 뉴스 | 📅 ${koreanDate}</div>
+            <a class="news-title" href="${item.link}" target="_blank">${item.title}</a>
+            <div class="action-btns">
+              <button class="btn-small" onclick="removeBookmark('${item.link}')">🗑️ 삭제</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function removeBookmark(link) {
+      let bookmarks = getBookmarks().filter(b => b.link !== link);
+      localStorage.setItem("newsBookmarks", JSON.stringify(bookmarks));
+      updateBookmarkCount();
+      renderBookmarks();
+    }
+
+    function updateBookmarkCount() {
+      const count = getBookmarks().length;
+      document.getElementById("bookmarkCount").innerText = count;
+    }
+
+    function escapeQuotes(str) {
+      if (!str) return '';
+      return str
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;')
+        .replace(/\n/g, ' ');
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서울시 시영주차장 찾기</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #eab308;
+            --accent: #38bdf8;
+            --kakao: #fee500;
+            --naver: #03cf5d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", Roboto, sans-serif; }
+        body { background-color: #020617; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+
+        .phone-frame {
+            width: 390px; height: 830px; background: var(--bg); border-radius: 44px;
+            border: 8px solid #334155; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            display: flex; flex-direction: column; overflow: hidden; position: relative; color: var(--text-main);
+        }
+
+        .status-bar { height: 26px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-sub); background: #020617; }
+
+        .app-header { padding: 12px 14px; background: var(--card-bg); border-bottom: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; }
+        
+        .location-control { display: flex; flex-direction: column; gap: 6px; }
+        .input-row { display: flex; align-items: center; gap: 6px; background: #0f172a; padding: 6px 10px; border-radius: 8px; border: 1px solid #334155; }
+        .input-row label { font-size: 11px; font-weight: bold; width: 70px; color: var(--accent); flex-shrink: 0; }
+        .input-row input { background: transparent; border: none; color: white; font-size: 12px; flex: 1; outline: none; min-width: 0; }
+        
+        /* 차량 유형 선택 필터 스타일 */
+        .vehicle-filter-group { display: flex; gap: 4px; background: #0f172a; padding: 3px; border-radius: 8px; border: 1px solid #334155; }
+        .vehicle-btn {
+            flex: 1; background: transparent; border: none; color: var(--text-sub); padding: 6px 0;
+            border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
+        }
+        .vehicle-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        .btn-gps { background: var(--accent); color: #020617; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .btn-search { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; text-align: center; }
+        .btn-search:active { opacity: 0.85; }
+
+        .notice {
+            background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent); color: #bae6fd;
+            font-size: 10px; padding: 6px 10px; border-radius: 6px; line-height: 1.4;
+        }
+
+        .hint { font-size: 10px; color: var(--text-sub); padding: 0 2px; }
+        .hint span { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+        .main-screen { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+        .result-header { font-size: 12px; color: var(--text-sub); padding: 0 2px 4px; }
+        .result-header b { color: var(--accent); }
+
+        .parking-card {
+            background: var(--card-bg); border-radius: 14px; padding: 14px; border: 1px solid #334155;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .card-title { font-size: 15px; font-weight: bold; color: #fff; line-height: 1.3; }
+        .card-dist { font-size: 11px; color: var(--accent); font-weight: bold; white-space: nowrap; }
+
+        .fee-box {
+            background: rgba(15, 23, 42, 0.7); border: 1px dashed #475569; border-radius: 8px;
+            padding: 8px 10px; font-size: 11px; color: #cbd5e1; display: flex; flex-direction: column; gap: 3px;
+        }
+        .fee-title { color: var(--accent); font-weight: bold; }
+
+        .picto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #0f172a; padding: 8px; border-radius: 8px; text-align: center; }
+        .picto-item { font-size: 11px; color: var(--text-sub); border: 1px solid transparent; border-radius: 6px; padding: 4px 2px; }
+        .picto-item.highlight { border-color: var(--accent); background: rgba(56, 189, 248, 0.1); }
+        .picto-item b { display: block; font-size: 14px; margin-top: 2px; }
+
+        .nav-btn-group { display: flex; gap: 6px; margin-top: 4px; }
+        .nav-btn {
+            flex: 1; border: none; padding: 9px 0; border-radius: 8px; font-size: 11px; font-weight: bold;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 4px; text-decoration: none;
+        }
+        .btn-kakao { background: var(--kakao); color: #191919; }
+        .btn-naver { background: var(--naver); color: white; }
+
+        .loading-text { text-align: center; padding: 30px; font-size: 13px; color: var(--accent); }
+        
+        .empty-box {
+            background: var(--card-bg); border: 1px dashed #475569; border-radius: 14px;
+            padding: 36px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .empty-icon { font-size: 32px; }
+        .empty-title { font-size: 14px; font-weight: bold; color: #f1f5f9; }
+        .empty-sub { font-size: 11px; color: var(--text-sub); line-height: 1.5; }
+
+        .badge-live {
+            display: inline-block; background: #065f46; color: #34d399; font-size: 9px;
+            padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 4px;
+        }
+
+        /* ========== 개인정보 및 위치 동의 모달 스타일 ========== */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(4px);
+            display: flex; justify-content: center; align-items: center; padding: 20px; z-index: 999;
+        }
+        .modal-card {
+            background: var(--card-bg); border: 1px solid #334155; border-radius: 20px;
+            padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 14px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .modal-title { font-size: 16px; font-weight: bold; color: #fff; text-align: center; }
+        .modal-desc { font-size: 11px; color: var(--text-sub); line-height: 1.5; }
+        .consent-box {
+            background: #0f172a; border-radius: 10px; padding: 10px 12px; border: 1px solid #334155;
+            display: flex; flex-direction: column; gap: 8px; font-size: 11px;
+        }
+        .consent-item { display: flex; justify-content: space-between; align-items: center; color: #cbd5e1; }
+        .consent-item input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+        .btn-consent {
+            background: var(--primary); color: white; border: none; padding: 12px;
+            border-radius: 10px; font-weight: bold; font-size: 13px; cursor: pointer; text-align: center;
+        }
+        .btn-consent:disabled { background: #475569; cursor: not-allowed; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+    <!-- 서비스 이용동의 Modal -->
+    <div class="modal-overlay" id="consentModal">
+        <div class="modal-card">
+            <div class="modal-title">📍 위치 서비스 및 이용 동의</div>
+            <div class="modal-desc">
+                주위에서 가장 가까운 서울시 시영주차장을 탐색하고 실시간 현황 정보를 제공하기 위해 아래 필수 권한 동의가 필요합니다.
+            </div>
+            <div class="consent-box">
+                <label class="consent-item">
+                    <span>[필수] 위치 기반 서비스 이용 동의</span>
+                    <input type="checkbox" id="chkLocation" onchange="validateConsent()">
+                </label>
+                <label class="consent-item">
+                    <span>[필수] 개인정보 수집 및 이용 동의</span>
+                    <input type="checkbox" id="chkPrivacy" onchange="validateConsent()">
+                </label>
+            </div>
+            <button class="btn-consent" id="btnConsentSubmit" disabled onclick="acceptConsent()">동의하고 시작하기</button>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="clock">--:--</span>
+        <span>서울시영 주차안내</span>
+    </div>
+
+    <div class="app-header">
+        <div class="location-control">
+            <div class="input-row">
+                <label>📍 내 위치</label>
+                <input type="text" id="startLocInput" value="서울시청" readonly>
+                <button class="btn-gps" onclick="setGPSLocation()">GPS</button>
+            </div>
+            <div class="input-row">
+                <label>🎯 목적지</label>
+                <input type="text" id="targetLocInput" placeholder="시영주차장 또는 지역 검색 (예: 종로, 여의도)" value="">
+            </div>
+        </div>
+
+        <!-- 차량 유형 선택 세그먼트 -->
+        <div class="vehicle-filter-group">
+            <button class="vehicle-btn active" onclick="setVehicleType('general', this)">🚙 일반차</button>
+            <button class="vehicle-btn" onclick="setVehicleType('ev', this)">⚡ 전기차</button>
+            <button class="vehicle-btn" onclick="setVehicleType('disabled', this)">♿ 장애인차</button>
+        </div>
+
+        <button class="btn-search" onclick="searchParking()">서울시 시영주차장 검색</button>
+        <div class="hint">
+            추천: <span onclick="quickSearch('종로')">종로</span> ·
+            <span onclick="quickSearch('여의도')">여의도</span> ·
+            <span onclick="quickSearch('동대문')">동대문</span> ·
+            <span onclick="quickSearch('강남')">강남</span> ·
+            <span onclick="quickSearch('한강')">한강공원</span>
+        </div>
+        <div class="notice">
+            🏛️ 서울시 열린데이터 광장(GetParkInfo) 실시간 연동 모드 지원
+        </div>
+    </div>
+
+    <div class="main-screen" id="parkingList">
+        <div class="loading-text">목적지를 입력하고<br>「서울시 시영주차장 검색」을 눌러주세요</div>
+    </div>
+</div>
+
+<script>
+    // ========== 서울시 열린데이터 광장 API 설정 ==========
+    const SEOUL_API_KEY = "YOUR_SEOUL_API_KEY";
+
+    // 선택된 차량 유형 ('general' | 'ev' | 'disabled')
+    let currentVehicleType = 'general';
+
+    // ========== 서울시 주요 시영/공영주차장 마스터 데이터 ==========
+    const SEOUL_MUNICIPAL_PARKING = [
+        { code: "1010001", name: "종로구청 시영주차장", addr: "서울특별시 종로구 삼봉로 43", lat: 37.5735, lng: 126.9790, capacity: 95, rates: "5분당 400원" },
+        { code: "1010002", name: "광화문 빌딩 시영주차장", addr: "서울특별시 종로구 세종대로 149", lat: 37.5698, lng: 126.9767, capacity: 150, rates: "5분당 500원" },
+        { code: "1020001", name: "서울시청 본청 시영주차장", addr: "서울특별시 중구 세종대로 110", lat: 37.5665, lng: 126.9780, capacity: 180, rates: "5분당 500원" },
+        { code: "1020002", name: "동대문디자인플라자(DDP) 시영주차장", addr: "서울특별시 중구 을지로 281", lat: 37.5668, lng: 127.0095, capacity: 350, rates: "5분당 400원" },
+        { code: "1020003", name: "남산예장 시영주차장", addr: "서울특별시 중구 예장동 8-1", lat: 37.5562, lng: 126.9904, capacity: 120, rates: "5분당 300원" },
+        { code: "1030001", name: "한강공원 여의도 1주차장", addr: "서울특별시 영등포구 여의서로 28", lat: 37.5251, lng: 126.9284, capacity: 450, rates: "30분 기본 2,000원" },
+        { code: "1030002", name: "여의도 수선화 시영주차장", addr: "서울특별시 영등포구 여의동로 3", lat: 37.5198, lng: 126.9382, capacity: 210, rates: "5분당 500원" },
+        { code: "1040001", name: "강남역 공영(시영)주차장", addr: "서울특별시 강남구 테헤란로 1", lat: 37.4979, lng: 127.0276, capacity: 220, rates: "5분당 600원" },
+        { code: "1040002", name: "학여울역 세텍 시영주차장", addr: "서울특별시 강남구 남부순환로 3104", lat: 37.4961, lng: 127.0708, capacity: 580, rates: "5분당 250원" },
+        { code: "1050001", name: "상암 수색역 공영주차장", addr: "서울특별시 마포구 수색로 217", lat: 37.5801, lng: 126.8950, capacity: 160, rates: "5분당 250원" },
+        { code: "1050002", name: "합정동 시영주차장", addr: "서울특별시 마포구 성지길 25", lat: 37.5485, lng: 126.9135, capacity: 85, rates: "5분당 400원" },
+        { code: "1060001", name: "잠실종합운동장 시영주차장", addr: "서울특별시 송파구 올림픽로 25", lat: 37.5160, lng: 127.0740, capacity: 1200, rates: "5분당 200원" }
+    ];
+
+    let userLat = 37.5665;
+    let userLng = 126.9780;
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').textContent =
+            now.getHours().toString().padStart(2, '0') + ':' +
+            now.getMinutes().toString().padStart(2, '0');
+    }
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    // ========== 이용동의 및 위치 처리 함수 ==========
+    function validateConsent() {
+        const chkLoc = document.getElementById('chkLocation').checked;
+        const chkPriv = document.getElementById('chkPrivacy').checked;
+        document.getElementById('btnConsentSubmit').disabled = !(chkLoc && chkPriv);
+    }
+
+    function acceptConsent() {
+        document.getElementById('consentModal').style.display = 'none';
+        setGPSLocation(); // 동의 완료 후 위치 자동 파악
+    }
+
+    function setVehicleType(type, btnElement) {
+        currentVehicleType = type;
+        document.querySelectorAll('.vehicle-btn').forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+        searchParking(); // 선택 변경 시 자동 다시 검색
+    }
+
+    function getDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) ** 2 +
+                  Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                  Math.sin(dLng/2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function formatDistance(km) {
+        if (km < 1) return Math.round(km * 1000) + ' m';
+        return km.toFixed(1) + ' km';
+    }
+
+    async function fetchSeoulParkingApi(parkingName) {
+        if (!SEOUL_API_KEY || SEOUL_API_KEY === "YOUR_SEOUL_API_KEY") {
+            return null;
+        }
+
+        const url = `http://openapi.seoul.go.kr:8088/${SEOUL_API_KEY}/json/GetParkInfo/1/10/${encodeURIComponent(parkingName)}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.GetParkInfo && data.GetParkInfo.row) {
+                return data.GetParkInfo.row;
+            }
+        } catch (error) {
+            console.warn("서울시 API 호출 오류:", error);
+        }
+        return null;
+    }
+
+    function mockRemaining(capacity) {
+        const occupiedRatio = 0.4 + Math.random() * 0.5;
+        return Math.max(0, Math.floor(capacity * (1 - occupiedRatio)));
+    }
+
+    function setGPSLocation() {
+        const startInput = document.getElementById('startLocInput');
+        startInput.value = "📍 GPS 확인 중...";
+
+        if (!navigator.geolocation) {
+            startInput.value = "📍 GPS 미지원";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                userLat = pos.coords.latitude;
+                userLng = pos.coords.longitude;
+                startInput.value = `📍 내 위치 (${userLat.toFixed(4)}, ${userLng.toFixed(4)})`;
+                searchParking();
+            },
+            () => {
+                userLat = 37.5665;
+                userLng = 126.9780;
+                startInput.value = "📍 서울시청 (GPS 실패)";
+                searchParking();
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+    }
+
+    function quickSearch(place) {
+        document.getElementById('targetLocInput').value = place;
+        searchParking();
+    }
+
+    async function searchParking() {
+        const container = document.getElementById('parkingList');
+        const query = document.getElementById('targetLocInput').value.trim();
+        const qLower = query.toLowerCase();
+
+        container.innerHTML = '<div class="loading-text">🔍 서울시 시영주차장 실시간 정보 조회 중...</div>';
+
+        let list = [];
+
+        // 1. API 데이터 조회 시도
+        const apiResult = await fetchSeoulParkingApi(query);
+
+        if (apiResult && apiResult.length > 0) {
+            list = apiResult.map(item => ({
+                name: item.PARKING_NAME,
+                addr: item.ADDR,
+                lat: parseFloat(item.LAT) || userLat,
+                lng: parseFloat(item.LOT) || userLng,
+                capacity: parseInt(item.CAPACITY) || 100,
+                remain: parseInt(item.CUR_PARKING) !== undefined ? (parseInt(item.CAPACITY) - parseInt(item.CUR_PARKING)) : 20,
+                rates: item.RATES ? `5분당 ${item.RATES}원` : "공영 요금 체계",
+                isLive: true
+            }));
+        } else {
+            // 2. 마스터 데이터에서 검색어 매칭
+            if (query) {
+                const filtered = SEOUL_MUNICIPAL_PARKING.filter(p =>
+                    p.name.toLowerCase().includes(qLower) ||
+                    p.addr.toLowerCase().includes(qLower)
+                );
+
+                list = filtered.map(p => ({
+                    ...p,
+                    remain: mockRemaining(p.capacity),
+                    isLive: false
+                }));
+            } else {
+                list = SEOUL_MUNICIPAL_PARKING.map(p => ({
+                    ...p,
+                    remain: mockRemaining(p.capacity),
+                    isLive: false
+                }));
+            }
+        }
+
+        container.innerHTML = '';
+
+        // 3. 검색 결과가 0건일 때 처리
+        if (query && list.length === 0) {
+            container.innerHTML = `
+                <div class="empty-box">
+                    <div class="empty-icon">🚫</div>
+                    <div class="empty-title">검색 결과가 없습니다</div>
+                    <div class="empty-sub">
+                        "<b>${query}</b>" 구역/장소에 해당하는<br>서울시 시영주차장을 찾을 수 없습니다.<br><br>
+                        다른 지역명(예: 종로, 여의도, 강남)으로 다시 검색해보세요.
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // 4. 거리 계산 및 정렬
+        list = list.map(p => ({
+            ...p,
+            distance: getDistance(userLat, userLng, p.lat, p.lng)
+        })).sort((a, b) => a.distance - b.distance);
+
+        const header = document.createElement('div');
+        header.className = 'result-header';
+        header.innerHTML = query ? `"<b>${query}</b>" 검색 결과` : `<b>내 위치</b> 기준 가까운 시영주차장`;
+        container.appendChild(header);
+
+        list.forEach(item => {
+            const isFull = item.remain <= 0;
+            const disCap = Math.floor(item.remain * 0.1);
+            const evCap  = Math.floor(item.remain * 0.15);
+            const genCap = Math.max(0, item.remain - disCap - evCap);
+
+            const kakaoUrl = `https://map.kakao.com/link/to/${encodeURIComponent(item.name)},${item.lat},${item.lng}`;
+            const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(item.name)}?c=${item.lng},${item.lat},15,0,0,0,dh`;
+
+            const card = document.createElement('div');
+            card.className = 'parking-card';
+            card.innerHTML = `
+                <div class="card-top">
+                    <span class="card-title">${item.name}</span>
+                    <span class="card-dist">${formatDistance(item.distance)}</span>
+                </div>
+                <div class="fee-box">
+                    <span class="fee-title">💳 요금 (시영 공영)</span>
+                    <span>${item.rates}</span>
+                    <span style="font-size:9px; color:var(--text-sub);">📍 ${item.addr}</span>
+                </div>
+                <div class="picto-grid">
+                    <div class="picto-item ${currentVehicleType === 'disabled' ? 'highlight' : ''}">
+                        ♿ 장애인<br><b style="color:var(--accent)">${disCap}</b>
+                    </div>
+                    <div class="picto-item ${currentVehicleType === 'ev' ? 'highlight' : ''}">
+                        ⚡ 전기차<br><b style="color:var(--green)">${evCap}</b>
+                    </div>
+                    <div class="picto-item ${currentVehicleType === 'general' ? 'highlight' : ''}">
+                        🚙 일반<br>
+                        <b style="color:${isFull ? 'var(--red)' : 'var(--yellow)'}">
+                            ${isFull ? '만차' : genCap}
+                        </b>
+                    </div>
+                </div>
+                <div style="font-size:9px; color:#64748b; text-align:center;">
+                    총 ${item.capacity}면 · 여유 ${item.remain}면
+                    ${item.isLive ? '<span class="badge-live">서울시 실시간</span>' : '<span class="badge-live" style="background:#475569; color:#cbd5e1;">시영 안내</span>'}
+                </div>
+                <div class="nav-btn-group">
+                    <a href="${kakaoUrl}" target="_blank" class="nav-btn btn-kakao">🟡 카카오맵</a>
+                    <a href="${naverUrl}" target="_blank" class="nav-btn btn-naver">🟢 네이버지도</a>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>

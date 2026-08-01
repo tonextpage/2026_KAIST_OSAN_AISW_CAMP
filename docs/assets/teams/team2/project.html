@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카이스트 중학교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#20242c;
+    --navy:#1b2a4a;
+    --navy-deep:#121c33;
+    --paper:#f6f2e9;
+    --paper-card:#fffdf8;
+    --gold:#c99a44;
+    --gold-soft:#e8d4a8;
+    --sage:#6f8f74;
+    --line:#d9d0bd;
+    --shadow: 0 10px 24px rgba(18,28,51,0.12);
+
+    /* 예약 시스템 전용 변수 */
+    --primary-color: #1b2a4a;
+    --primary-deep: #121c33;
+    --secondary-color: #c99a44;
+    --secondary-soft: #e8d4a8;
+    --success-color: #6f8f74;
+    --danger-color: #c9584a;
+    --warning-color: #c99a44;
+    --bg-color: #f6f2e9;
+    --card-bg: #fffdf8;
+    --text-color: #3a3f4a;
+    --text-title: #121c33;
+    --border-color: #d9d0bd;
+    --sub-bg: #efe9db;
+  }
+
+  body.dark-mode{
+    --bg-color: #121c33;
+    --card-bg: #1b2a4a;
+    --text-color: #e8e4d8;
+    --text-title: #e8d4a8;
+    --border-color: #33436b;
+    --sub-bg: #223259;
+    --shadow: 0 10px 24px rgba(0,0,0,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans KR', sans-serif;
+    line-height:1.6;
+  }
+  h1,h2,h3{
+    font-family:'Noto Serif KR', serif;
+    margin:0;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.03em; }
+
+  /* Header */
+  header{
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+    color:#f4efe2;
+    padding:56px 20px 40px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  header::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: radial-gradient(circle at 15% 20%, rgba(201,154,68,0.15), transparent 40%),
+                       radial-gradient(circle at 85% 80%, rgba(201,154,68,0.12), transparent 45%);
+    pointer-events:none;
+  }
+  .crest{
+    width:64px; height:64px; margin:0 auto 18px;
+  }
+  header h1{
+    font-size:clamp(28px,4vw,40px);
+    font-weight:900;
+    letter-spacing:0.01em;
+  }
+  header p{
+    margin-top:10px;
+    color:var(--gold-soft);
+    font-size:15px;
+    letter-spacing:0.08em;
+  }
+
+  /* Nav */
+  nav{
+    background:var(--paper-card);
+    border-bottom:1px solid var(--line);
+    padding:0 20px;
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    position:sticky;
+    top:0;
+    z-index:10;
+    box-shadow: 0 2px 8px rgba(18,28,51,0.05);
+  }
+  nav a{
+    text-decoration:none;
+    color:var(--navy);
+    font-weight:700;
+    font-size:14px;
+    padding:16px 18px;
+    border-bottom:3px solid transparent;
+    transition:.2s;
+  }
+  nav a:hover{ border-bottom-color:var(--gold); color:var(--navy-deep); }
+
+  main{ max-width:1040px; margin:0 auto; padding:56px 20px 20px; }
+
+  section{ margin-bottom:64px; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--sage);
+    letter-spacing:0.12em;
+    margin-bottom:8px;
+    display:block;
+  }
+  section > h2{
+    font-size:26px;
+    margin-bottom:22px;
+    color:var(--navy-deep);
+  }
+
+  /* Intro */
+  .intro-grid{
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap:36px;
+    align-items:center;
+  }
+  .intro-grid p{ color:#3a3f4a; font-size:15.5px; }
+  .stat-row{ display:flex; gap:24px; margin-top:22px; }
+  .stat b{ font-family:'Noto Serif KR',serif; font-size:26px; color:var(--navy); display:block; }
+  .stat span{ font-size:12px; color:#71757e; }
+  .intro-card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:22px;
+    box-shadow:var(--shadow);
+  }
+  .intro-card img{ width:100%; border-radius:4px; display:block; }
+
+  /* Notice board */
+  .board{
+    background: repeating-linear-gradient(0deg, var(--paper-card), var(--paper-card) 51px, #efe9db 52px);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:8px 24px;
+    box-shadow:var(--shadow);
+  }
+  .notice{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    padding:14px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .notice:last-child{ border-bottom:none; }
+  .notice .tag{
+    flex:0 0 auto;
+    font-size:11px;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:3px;
+    background:var(--navy);
+    color:#f4efe2;
+  }
+  .notice .tag.important{ background:var(--gold); color:var(--navy-deep); }
+  .notice .title{ flex:1; font-weight:500; color:var(--ink); }
+  .notice .date{ font-size:12px; color:#8a8d95; }
+
+  /* Calendar table */
+  table.cal{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--paper-card);
+    box-shadow:var(--shadow);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  table.cal th{
+    background:var(--navy);
+    color:#f4efe2;
+    text-align:left;
+    padding:12px 16px;
+    font-size:13px;
+    font-weight:500;
+  }
+  table.cal td{
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  table.cal tr:last-child td{ border-bottom:none; }
+  table.cal td.date{ font-family:'IBM Plex Mono',monospace; color:var(--sage); white-space:nowrap; width:120px; }
+
+  /* Gallery */
+  .gallery{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  .gallery div{
+    aspect-ratio:1;
+    border-radius:6px;
+    background:linear-gradient(135deg,var(--gold-soft),var(--sage));
+    opacity:0.85;
+  }
+  .gallery div:nth-child(2n){ background:linear-gradient(135deg,var(--navy),var(--sage)); }
+  .gallery div:nth-child(3n){ background:linear-gradient(135deg,var(--gold),var(--navy)); }
+
+  /* FAQ */
+  details{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    margin-bottom:10px;
+    padding:14px 18px;
+  }
+  details summary{
+    cursor:pointer;
+    font-weight:700;
+    color:var(--navy-deep);
+    list-style:none;
+  }
+  details summary::-webkit-details-marker{ display:none; }
+  details summary::before{ content:"Q. "; color:var(--gold); }
+  details p{ margin:10px 0 0; color:#4a4e57; font-size:14.5px; }
+
+  /* Footer */
+  footer{
+    background:var(--navy-deep);
+    color:#c9cede;
+    padding:40px 20px;
+    margin-top:40px;
+  }
+  .foot-grid{
+    max-width:1040px; margin:0 auto;
+    display:grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    gap:28px;
+    font-size:13.5px;
+  }
+  .foot-grid h3{ color:#f4efe2; font-size:15px; margin-bottom:10px; }
+  .foot-grid a{ color:#c9cede; text-decoration:none; display:block; margin-bottom:6px; }
+  .foot-grid a:hover{ color:var(--gold-soft); }
+  .copyright{
+    text-align:center; margin-top:30px; padding-top:20px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    font-size:12px; color:#8890a3;
+  }
+
+  @media (max-width:720px){
+    .intro-grid{ grid-template-columns:1fr; }
+    .foot-grid{ grid-template-columns:1fr; }
+    .gallery{ grid-template-columns:repeat(2,1fr); }
+    nav{ flex-wrap:wrap; }
+  }
+  :focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+  /* 운동장 예약 시스템 위젯 스타일 */
+  .reservation-app{
+    padding: 8px 0 10px;
+  }
+
+  .reservation-app .container {
+    background: var(--card-bg);
+    padding: 34px 30px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    transition: background-color 0.3s;
+  }
+
+  .reservation-app h2 {
+    font-family: 'Noto Serif KR', serif;
+    text-align: center;
+    color: var(--text-title);
+    margin-bottom: 6px;
+    font-size: 24px;
+    font-weight: 900;
+  }
+
+  .reservation-app .subtitle {
+    text-align: center;
+    color: var(--secondary-color);
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    margin-bottom: 26px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  body.dark-mode .reservation-app .subtitle {
+    color: var(--secondary-soft);
+  }
+
+  .reservation-app .calendar-section {
+    margin-bottom: 26px;
+    background: repeating-linear-gradient(0deg, var(--sub-bg), var(--sub-bg) 49px, var(--border-color) 50px);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .reservation-app .calendar-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+    color: var(--text-title);
+  }
+
+  .reservation-app .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .reservation-app .cal-day {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 12px;
+    cursor: default;
+  }
+
+  .reservation-app .cal-day .day-name {
+    font-weight: 700;
+    margin-bottom: 4px;
+    font-family: 'Noto Serif KR', serif;
+    color: var(--text-title);
+  }
+
+  .reservation-app .cal-day .day-status {
+    color: var(--success-color);
+    font-weight: 600;
+    font-size: 11px;
+    word-break: keep-all;
+  }
+
+  .reservation-app .cal-day.booked .day-status {
+    color: var(--danger-color);
+  }
+  .reservation-app .cal-day.booked{
+    border-color: rgba(201,88,74,0.4);
+  }
+
+  .reservation-app .step {
+    display: none;
+  }
+
+  .reservation-app .step.active {
+    display: block;
+  }
+
+  .reservation-app label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 5px;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-title);
+  }
+
+  .reservation-app input,
+  .reservation-app select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .reservation-app input:focus,
+  .reservation-app select:focus {
+    border-color: var(--secondary-color);
+  }
+
+  .reservation-app button {
+    width: 100%;
+    padding: 13px;
+    background-color: var(--primary-color);
+    color: #f4efe2;
+    border: none;
+    border-radius: 6px;
+    font-size: 14.5px;
+    cursor: pointer;
+    font-weight: 700;
+    margin-top: 16px;
+    transition: background-color 0.2s, transform .1s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .reservation-app button:hover {
+    background-color: var(--primary-deep);
+  }
+  .reservation-app button:active{ transform: translateY(1px); }
+
+  .reservation-app .btn-danger {
+    background-color: var(--danger-color);
+  }
+  .reservation-app .btn-danger:hover {
+    background-color: #a8483b;
+  }
+
+  .reservation-app .btn-teacher {
+    background-color: var(--success-color);
+  }
+  .reservation-app .btn-teacher:hover {
+    background-color: #57735c;
+  }
+
+  .reservation-app .btn-settings {
+    background-color: #6b6250;
+  }
+  .reservation-app .btn-settings:hover {
+    background-color: #52493a;
+  }
+
+  .reservation-app .role-select-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .reservation-app .role-btn {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .2s, background-color .2s, color .2s;
+  }
+
+  .reservation-app .role-btn.active {
+    border-color: var(--primary-color);
+    background-color: var(--sub-bg);
+    color: var(--primary-color);
+  }
+
+  body.dark-mode .reservation-app .role-btn.active {
+    background-color: var(--primary-deep);
+    color: var(--secondary-soft);
+  }
+
+  .reservation-app .sub-tab-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .reservation-app .sub-tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: var(--sub-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-color);
+    cursor: pointer;
+    margin-top: 0;
+  }
+
+  .reservation-app .sub-tab-btn.active {
+    background: var(--primary-color);
+    color: #f4efe2;
+    border-color: var(--primary-color);
+  }
+
+  .reservation-app .day-selection {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-top: 5px;
+  }
+
+  .reservation-app .day-card {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 2px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+
+  .reservation-app .day-card input {
+    display: none;
+  }
+
+  .reservation-app .day-card.selected {
+    border-color: var(--primary-color);
+    background-color: var(--sub-bg);
+    color: var(--primary-color);
+  }
+
+  body.dark-mode .reservation-app .day-card.selected {
+    background-color: var(--primary-deep);
+    color: var(--secondary-soft);
+  }
+
+  .reservation-app .day-card.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: var(--sub-bg);
+  }
+
+  .reservation-app .day-quota-note {
+    display: block;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--sage);
+    margin-top: 4px;
+  }
+
+  .reservation-app .message {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    line-height: 1.4;
+    font-family: 'Noto Serif KR', serif;
+  }
+
+  .reservation-app .message.success {
+    background-color: rgba(111,143,116,0.15);
+    color: var(--success-color);
+  }
+
+  .reservation-app .message.error {
+    background-color: rgba(201,88,74,0.12);
+    color: var(--danger-color);
+  }
+
+  .reservation-app .status-box {
+    background: var(--sub-bg);
+    padding: 14px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.6;
+    border: 1px solid var(--border-color);
+  }
+
+  .reservation-app .settings-card {
+    background: var(--sub-bg);
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+
+  /* 교사 전용 예약자 목록 스타일 */
+  .teacher-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .teacher-list-table th, .teacher-list-table td {
+    border: 1px solid var(--border-color);
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .teacher-list-table th {
+    background: var(--primary-color);
+    color: #f4efe2;
+    font-weight: 500;
+  }
+  .teacher-list-table td.empty-td {
+    color: #8a8d95;
+    font-style: italic;
+  }
+  .btn-sm-del {
+    background: var(--danger-color);
+    color: #fff;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 0 !important;
+    width: auto !important;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="crest" viewBox="0 0 64 64" fill="none">
+    <circle cx="32" cy="32" r="30" stroke="#c99a44" stroke-width="2"/>
+    <path d="M32 14 L44 24 L44 42 L32 50 L20 42 L20 24 Z" stroke="#e8d4a8" stroke-width="1.5"/>
+    <text x="32" y="37" text-anchor="middle" fill="#e8d4a8" font-family="Noto Serif KR" font-size="14" font-weight="700">KAIST</text>
+  </svg>
+  <h1>카이스트 중학교</h1>
+  <p>배움이 자라는 곳, 함께 만드는 열린 공간</p>
+</header>
+
+<nav>
+  <a href="#intro">학교 소개</a>
+  <a href="#notice">공지사항</a>
+  <a href="#calendar">학사 일정</a>
+  <a href="#field">운동장 예약</a>
+  <a href="#gallery">갤러리</a>
+  <a href="#faq">자주 묻는 질문</a>
+</nav>
+
+<main>
+
+  <section id="intro">
+    <span class="eyebrow">ABOUT US</span>
+    <h2>학교 소개</h2>
+    <div class="intro-grid">
+      <div>
+        <p>카이스트 중학교는 스스로 질문하고 탐구하는 힘을 키우는 학교입니다. 1학년부터 3학년까지 전 학생이 참여하는 프로젝트 수업과 다양한 동아리 활동을 통해 배움의 즐거움을 경험합니다.</p>
+        <div class="stat-row">
+          <div class="stat"><b>642</b><span>재학생 수</span></div>
+          <div class="stat"><b>58</b><span>교직원 수</span></div>
+          <div class="stat"><b>24</b><span>동아리 수</span></div>
+        </div>
+      </div>
+      <div class="intro-card">
+        <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80" alt="학교 전경">
+      </div>
+    </div>
+  </section>
+
+  <section id="notice">
+    <span class="eyebrow">NOTICE</span>
+    <h2>공지사항</h2>
+    <div class="board">
+      <div class="notice">
+        <span class="tag important">중요</span>
+        <span class="title">2026학년도 2학기 학부모 상담주간 안내</span>
+        <span class="date mono">2026.08.01</span>
+      </div>
+      <div class="notice">
+        <span class="tag">일반</span>
+        <span class="title">여름방학 도서관 개방 시간 변경 안내</span>
+        <span class="date mono">2026.07.28</span>
+      </div>
+      <div class="notice">
+        <span class="tag">일반</span>
+        <span class="title">교내 과학 탐구대회 참가 신청 접수 중</span>
+        <span class="date mono">2026.07.22</span>
+      </div>
+      <div class="notice">
+        <span class="tag important">중요</span>
+        <span class="title">운동장 야간 조명 공사로 인한 일부 시간대 이용 제한</span>
+        <span class="date mono">2026.07.18</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="calendar">
+    <span class="eyebrow">SCHEDULE</span>
+    <h2>학사 일정</h2>
+    <table class="cal">
+      <tr><th>일자</th><th>내용</th></tr>
+      <tr><td class="date">08.18 (화)</td><td>2학기 개학</td></tr>
+      <tr><td class="date">08.25 (화)</td><td>학부모 상담주간 시작</td></tr>
+      <tr><td class="date">09.10 (목)</td><td>가을 체육대회</td></tr>
+      <tr><td class="date">10.02 (금)</td><td>중간고사 시작</td></tr>
+      <tr><td class="date">11.13 (금)</td><td>학교 축제 (다솜제)</td></tr>
+    </table>
+  </section>
+
+  <!-- 운동장 예약 시스템 -->
+  <section id="field">
+    <span class="eyebrow">RESERVATION</span>
+
+    <div class="reservation-app">
+      <div class="container">
+        <h2 id="display-school-name">카이스트 중학교 운동장 예약</h2>
+        <div class="subtitle" id="display-subtitle">모두가 공정하게 이용하는 열린 운동장</div>
+
+        <!-- [상단 달력 시스템] -->
+        <div class="calendar-section">
+          <div class="calendar-title">📅 이번 주 운동장 예약 현황판</div>
+          <div class="calendar-grid">
+            <div class="cal-day" id="cal-월요일"><div class="day-name">월</div><div class="day-status" id="status-월요일">예약 가능</div></div>
+            <div class="cal-day" id="cal-화요일"><div class="day-name">화</div><div class="day-status" id="status-화요일">예약 가능</div></div>
+            <div class="cal-day" id="cal-수요일"><div class="day-name">수</div><div class="day-status" id="status-수요일">예약 가능</div></div>
+            <div class="cal-day" id="cal-목요일"><div class="day-name">목</div><div class="day-status" id="status-목요일">예약 가능</div></div>
+            <div class="cal-day" id="cal-금요일"><div class="day-name">금</div><div class="day-status" id="status-금요일">예약 가능</div></div>
+          </div>
+        </div>
+
+        <!-- [0단계] 계정 선택 화면 -->
+        <div id="step-role" class="step active">
+          <label>접속 유형을 선택해주세요</label>
+          <div class="role-select-box">
+            <div class="role-btn active" id="btn-student-role" onclick="selectRole('student')">👨‍🎓 학생용</div>
+            <div class="role-btn" id="btn-teacher-role" onclick="selectRole('teacher')">👩‍🏫 교사용</div>
+          </div>
+
+          <div id="student-code-box">
+            <label for="accessCode">학생 입장 코드 입력</label>
+            <input type="password" id="accessCode" placeholder="학생 코드를 입력하세요">
+          </div>
+
+          <div id="teacher-code-box" style="display:none;">
+            <label for="teacherCode">교사 관리 코드 입력</label>
+            <input type="password" id="teacherCode" placeholder="교사 관리 코드를 입력하세요">
+          </div>
+
+          <button onclick="checkCode()">입장하기</button>
+          <p id="code-error" style="color: var(--danger-color); font-size: 13px; text-align: center; margin-top: 10px;"></p>
+        </div>
+
+        <!-- [1단계] 학생 서비스 통합 화면 (예약 및 취소) -->
+        <div id="step-booking" class="step">
+          <div class="sub-tab-box">
+            <button class="sub-tab-btn active" id="tab-new-booking" onclick="switchStudentTab('new')">📌 신규 예약하기</button>
+            <button class="sub-tab-btn" id="tab-cancel-booking" onclick="switchStudentTab('cancel')">❌ 내 예약 취소하기</button>
+          </div>
+
+          <!-- 서브 탭 1: 신규 예약 -->
+          <div id="student-sub-new">
+            <label for="studentGrade">학년 선택</label>
+            <select id="studentGrade" onchange="refreshDaySelectionUI()">
+              <option value="1학년">1학년</option>
+              <option value="2학년" selected>2학년</option>
+              <option value="3학년">3학년</option>
+            </select>
+
+            <label for="studentName">대표자 이름</label>
+            <input type="text" id="studentName" placeholder="예: 홍길동" oninput="refreshDaySelectionUI()">
+
+            <label>요일 선택 (일주일 최대 <strong id="dayQuotaMax">2</strong>개 가능)
+              <span class="day-quota-note" id="dayQuotaNote"></span>
+            </label>
+            <div class="day-selection">
+              <label class="day-card" id="daycard-월요일"><input type="checkbox" name="bookingDay" value="월요일" onchange="handleDayToggle(this)">월</label>
+              <label class="day-card" id="daycard-화요일"><input type="checkbox" name="bookingDay" value="화요일" onchange="handleDayToggle(this)">화</label>
+              <label class="day-card" id="daycard-수요일"><input type="checkbox" name="bookingDay" value="수요일" onchange="handleDayToggle(this)">수</label>
+              <label class="day-card" id="daycard-목요일"><input type="checkbox" name="bookingDay" value="목요일" onchange="handleDayToggle(this)">목</label>
+              <label class="day-card" id="daycard-금요일"><input type="checkbox" name="bookingDay" value="금요일" onchange="handleDayToggle(this)">금</label>
+            </div>
+
+            <button onclick="makeReservation()">운동장 예약 확정하기</button>
+          </div>
+
+          <!-- 서브 탭 2: 예약 직접 취소 -->
+          <div id="student-sub-cancel" style="display: none;">
+            <div style="background: var(--sub-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px;">
+              💡 예약 시 입력했던 <strong>학년</strong>과 <strong>대표자 이름</strong>을 정확히 입력해주세요. 본인 확인 후 해당 주의 예약이 취소됩니다.
+            </div>
+
+            <label for="cancelGrade">학년 선택</label>
+            <select id="cancelGrade">
+              <option value="1학년">1학년</option>
+              <option value="2학년" selected>2학년</option>
+              <option value="3학년">3학년</option>
+            </select>
+
+            <label for="cancelName">대표자 이름</label>
+            <input type="text" id="cancelName" placeholder="예약 시 작성한 대표자 이름">
+
+            <button class="btn-danger" onclick="cancelStudentReservation()">예약 취소 신청하기</button>
+          </div>
+
+          <button onclick="goToInitialScreen()" style="background-color: #64748b; margin-top: 15px;">처음으로</button>
+        </div>
+
+        <!-- [교사 전용 관리/초기화 및 예약자 상세 목록 화면] -->
+        <div id="step-teacher-admin" class="step">
+          <div style="background: #f0fdf4; border: 1px solid #10b981; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px;">
+            <strong style="color: #047857; font-size: 15px;">👩‍🏫 교사 관리자 모드</strong>
+            <p style="font-size: 13px; color: #334155; margin: 8px 0 0 0;">예약자 이름 확인 및 일정 지정 관리</p>
+          </div>
+
+          <!-- 교사 날짜 직접 지정 기능 -->
+          <div class="settings-card">
+            <label style="margin-top:0;">📌 특정 요일 직접 선점/배정</label>
+            <label for="teacherTargetDay">대상 요일 선택</label>
+            <select id="teacherTargetDay">
+              <option value="월요일">월요일</option>
+              <option value="화요일">화요일</option>
+              <option value="수요일">수요일</option>
+              <option value="목요일">목요일</option>
+              <option value="금요일">금요일</option>
+            </select>
+
+            <label for="teacherAssignType">선택 항목 (표시 이름)</label>
+            <select id="teacherAssignType">
+              <option value="1학년">1학년</option>
+              <option value="2학년">2학년</option>
+              <option value="3학년">3학년</option>
+              <option value="학교일정">학교일정</option>
+            </select>
+
+            <button class="btn-teacher" onclick="assignTeacherSchedule()" style="margin-top: 12px;">해당 요일 선점 등록하기</button>
+          </div>
+
+          <!-- 교사 전용 예약자 정보 확인 목록 -->
+          <div class="settings-card">
+            <label style="margin-top:0;">📋 이번 주 전체 예약/선점 상세 목록</label>
+            <table class="teacher-list-table">
+              <thead>
+                <tr>
+                  <th>요일</th>
+                  <th>구분</th>
+                  <th>대표자 이름</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="teacherBookingTableBody">
+                <!-- 자바스크립트로 동적 동기화 -->
+              </tbody>
+            </table>
+          </div>
+
+          <button class="btn-settings" onclick="openSettingsScreen()" style="margin-top: 15px;">⚙️ 시스템 설정 (학교 정보 / 테마 / 초기화 방식)</button>
+
+          <button class="btn-danger" onclick="resetSystemData()" style="margin-top: 15px;">🔄 이번 주 예약 데이터 수동 전체 삭제</button>
+
+          <button onclick="goToInitialScreen()" style="background-color: #64748b; margin-top: 15px;">처음으로 돌아가기</button>
+        </div>
+
+        <!-- [⚙️ 설정 화면] -->
+        <div id="step-settings" class="step">
+          <div style="text-align: center; margin-bottom: 15px;">
+            <strong style="font-size: 18px;">⚙️ 시스템 환경 설정</strong>
+          </div>
+
+          <div class="settings-card">
+            <label style="margin-top: 0;">🏫 학교 정보 설정</label>
+            <label for="cfgSchoolName">학교 이름 / 시스템 제목</label>
+            <input type="text" id="cfgSchoolName" placeholder="예: OO중학교 운동장 클린 예약">
+
+            <label for="cfgSubtitle">서브 타이틀 / 안내 문구</label>
+            <input type="text" id="cfgSubtitle" placeholder="예: 모두가 공정하게 이용하는 열린 운동장">
+          </div>
+
+          <div class="settings-card">
+            <label style="margin-top: 0;">🎨 화면 배경 테마 설정</label>
+            <select id="cfgTheme">
+              <option value="light">⚪ 흰 배경 (라이트 모드)</option>
+              <option value="dark">⚫ 검은 배경 (다크 모드)</option>
+            </select>
+          </div>
+
+          <div class="settings-card">
+            <label style="margin-top: 0;">🔄 예약 데이터 초기화 방식</label>
+            <select id="cfgResetMode">
+              <option value="auto">🤖 자동 초기화 (매주 월요일 00:00 기준 자동 리셋)</option>
+              <option value="manual">🖐️ 수동 초기화 (관리자 버튼 직접 실행)</option>
+            </select>
+          </div>
+
+          <button onclick="saveSystemSettings()" style="background-color: #10b981;">💾 설정 저장하기</button>
+          <button onclick="closeSettingsScreen()" style="background-color: #64748b; margin-top: 10px;">뒤로 가기</button>
+        </div>
+
+        <!-- [2단계] 결과 화면 -->
+        <div id="step-result" class="step">
+          <div id="resultMessage" class="message"></div>
+          <div class="status-box" id="statusDetails"></div>
+          
+          <button onclick="goToInitialScreen()" style="background-color: #64748b; margin-top: 15px;">처음으로 돌아가기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <span class="eyebrow">GALLERY</span>
+    <h2>학교생활 갤러리</h2>
+    <div class="gallery">
+      <div></div><div></div><div></div><div></div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <span class="eyebrow">FAQ</span>
+    <h2>자주 묻는 질문</h2>
+    <details>
+      <summary>전학은 어떻게 신청하나요?</summary>
+      <p>행정실(내선 201)로 문의하시면 필요 서류와 절차를 안내받으실 수 있습니다.</p>
+    </details>
+    <details>
+      <summary>급식 알레르기 정보는 어디서 확인하나요?</summary>
+      <p>학교 홈페이지 급식 게시판에서 주간 식단표와 알레르기 유발 식품 정보를 확인하실 수 있습니다.</p>
+    </details>
+    <details>
+      <summary>동아리는 언제 신청하나요?</summary>
+      <p>매 학기 초 2주간 온라인으로 신청을 받으며, 신청 기간은 공지사항에 별도 안내됩니다.</p>
+    </details>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-grid">
+    <div>
+      <h3>카이스트 중학교</h3>
+      <p style="color:#a7adc2; margin:0;">대전광역시 유성구 대학로 000<br>대표전화 042-000-0000</p>
+    </div>
+    <div>
+      <h3>바로가기</h3>
+      <a href="#notice">공지사항</a>
+      <a href="#calendar">학사일정</a>
+      <a href="#field">운동장 예약</a>
+    </div>
+    <div>
+      <h3>안내</h3>
+      <a href="#">개인정보처리방침</a>
+      <a href="#">이메일무단수집거부</a>
+      <a href="#">찾아오시는 길</a>
+    </div>
+  </div>
+  <p class="copyright">© 2026 카이스트 중학교. All rights reserved.</p>
+</footer>
+
+<script>
+    // 허용된 학생 코드 목록
+    const STUDENT_CODES = ["1111", "2026", "10718", "10202", "10204"];
+    // 수정된 교사 관리 코드
+    const TEACHER_CODE = "123456788901234567890";
+    
+    const MAX_WEEKLY_PER_USER = 2; // 일주일 1인당 최대 선택 가능 요일 수
+    const days = ["월요일", "화요일", "수요일", "목요일", "금요일"];
+
+    function getCurrentWeekKey() {
+        const date = new Date();
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return `${d.getUTCFullYear()}-W${weekNo}`;
+    }
+
+    function getValidBookings() {
+        const stored = JSON.parse(localStorage.getItem('middleSchoolBookings')) || {};
+        const currentWeek = getCurrentWeekKey();
+
+        if (!stored.weekKey || stored.weekKey !== currentWeek) {
+            const resetData = { weekKey: currentWeek, data: {} };
+            localStorage.setItem('middleSchoolBookings', JSON.stringify(resetData));
+            return resetData.data;
+        }
+        return stored.data || {};
+    }
+
+    function saveBookings(data) {
+        const currentWeek = getCurrentWeekKey();
+        const payload = {
+            weekKey: currentWeek,
+            data: data
+        };
+        localStorage.setItem('middleSchoolBookings', JSON.stringify(payload));
+    }
+
+    if (!localStorage.getItem('systemSettings')) {
+        const defaultSettings = {
+            schoolName: "카이스트 중학교 운동장 예약",
+            subtitle: "모두가 공정하게 이용하는 열린 운동장",
+            theme: "light",
+            resetMode: "auto"
+        };
+        localStorage.setItem('systemSettings', JSON.stringify(defaultSettings));
+    }
+
+    applySystemSettings();
+    updateCalendarUI();
+
+    let currentSelectedRole = 'student';
+
+    function goToInitialScreen() {
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-role').classList.add('active');
+        
+        document.getElementById('accessCode').value = '';
+        document.getElementById('teacherCode').value = '';
+        document.getElementById('code-error').innerText = '';
+        
+        updateCalendarUI();
+    }
+
+    function applySystemSettings() {
+        const settings = JSON.parse(localStorage.getItem('systemSettings'));
+
+        document.getElementById('display-school-name').innerText = settings.schoolName;
+        document.getElementById('display-subtitle').innerText = settings.subtitle;
+
+        if (settings.theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+
+    function selectRole(role) {
+        currentSelectedRole = role;
+        document.getElementById('code-error').innerText = "";
+        if (role === 'student') {
+            document.getElementById('btn-student-role').classList.add('active');
+            document.getElementById('btn-teacher-role').classList.remove('active');
+            document.getElementById('student-code-box').style.display = 'block';
+            document.getElementById('teacher-code-box').style.display = 'none';
+        } else {
+            document.getElementById('btn-teacher-role').classList.add('active');
+            document.getElementById('btn-student-role').classList.remove('active');
+            document.getElementById('student-code-box').style.display = 'none';
+            document.getElementById('teacher-code-box').style.display = 'block';
+        }
+    }
+
+    function switchStudentTab(tab) {
+        if (tab === 'new') {
+            document.getElementById('tab-new-booking').classList.add('active');
+            document.getElementById('tab-cancel-booking').classList.remove('active');
+            document.getElementById('student-sub-new').style.display = 'block';
+            document.getElementById('student-sub-cancel').style.display = 'none';
+            refreshDaySelectionUI();
+        } else {
+            document.getElementById('tab-cancel-booking').classList.add('active');
+            document.getElementById('tab-new-booking').classList.remove('active');
+            document.getElementById('student-sub-cancel').style.display = 'block';
+            document.getElementById('student-sub-new').style.display = 'none';
+        }
+    }
+
+    function updateCalendarUI() {
+        const bookings = getValidBookings();
+        days.forEach(day => {
+            const statusEl = document.getElementById(`status-${day}`);
+            const cardEl = document.getElementById(`cal-${day}`);
+
+            if (bookings[day] && bookings[day].grade) {
+                statusEl.innerText = `${bookings[day].grade}`;
+                cardEl.classList.add('booked');
+            } else {
+                statusEl.innerText = "예약 가능";
+                cardEl.classList.remove('booked');
+            }
+        });
+    }
+
+    // 교사 전용 예약자 목록 테이블 업데이트 함수
+    function renderTeacherBookingList() {
+        const bookings = getValidBookings();
+        const tbody = document.getElementById('teacherBookingTableBody');
+        tbody.innerHTML = '';
+
+        days.forEach(day => {
+            const tr = document.createElement('tr');
+            if (bookings[day]) {
+                tr.innerHTML = `
+                    <td><strong>${day}</strong></td>
+                    <td>${bookings[day].grade}</td>
+                    <td><strong>${bookings[day].name}</strong></td>
+                    <td><button class="btn-sm-del" onclick="deleteSingleBooking('${day}')">삭제</button></td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td>${day}</td>
+                    <td class="empty-td" colspan="2">예약 정보 없음</td>
+                    <td>-</td>
+                `;
+            }
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 교사 단일 항목 삭제
+    function deleteSingleBooking(day) {
+        let bookings = getValidBookings();
+        if (confirm(`[${day}] (${bookings[day].grade} - ${bookings[day].name}) 예약을 삭제하시겠습니까?`)) {
+            delete bookings[day];
+            saveBookings(bookings);
+            updateCalendarUI();
+            renderTeacherBookingList();
+        }
+    }
+
+    function checkCode() {
+        const errorText = document.getElementById('code-error');
+
+        if (currentSelectedRole === 'student') {
+            const inputCode = document.getElementById('accessCode').value.trim();
+            if (STUDENT_CODES.includes(inputCode)) {
+                document.getElementById('step-role').classList.remove('active');
+                document.getElementById('step-booking').classList.add('active');
+                refreshDaySelectionUI();
+            } else {
+                errorText.innerText = "⚠️ 학생 코드가 올바르지 않습니다.";
+            }
+        } else {
+            const inputCode = document.getElementById('teacherCode').value.trim();
+            if (inputCode === TEACHER_CODE) {
+                document.getElementById('step-role').classList.remove('active');
+                document.getElementById('step-teacher-admin').classList.add('active');
+                renderTeacherBookingList();
+            } else {
+                errorText.innerText = "⚠️ 교사 관리 코드가 올바르지 않습니다.";
+            }
+        }
+    }
+
+    function getUserWeeklyBookingCount(grade, name) {
+        const bookings = getValidBookings();
+        if (!name) return 0;
+        let count = 0;
+        days.forEach(day => {
+            if (bookings[day] && bookings[day].grade === grade && bookings[day].name === name) {
+                count++;
+            }
+        });
+        return count;
+    }
+
+    function refreshDaySelectionUI() {
+        const bookings = getValidBookings();
+        const grade = document.getElementById('studentGrade').value;
+        const name = document.getElementById('studentName').value.trim();
+
+        const totalBookedDays = Object.keys(bookings).length;
+        const totalAvailableDays = 5 - totalBookedDays;
+
+        const userAlreadyBooked = getUserWeeklyBookingCount(grade, name);
+        const userRemainingQuota = Math.max(0, MAX_WEEKLY_PER_USER - userAlreadyBooked);
+
+        const maxQuota = Math.min(userRemainingQuota, totalAvailableDays);
+
+        document.getElementById('dayQuotaMax').innerText = maxQuota;
+        const note = document.getElementById('dayQuotaNote');
+
+        if (!name) {
+            note.innerText = `💡 대표자 이름을 입력하시면 이번 주 신청 가능 잔여 횟수가 계산됩니다. (주당 최대 2회)`;
+        } else {
+            note.innerText = `[${grade} ${name}] 님 이번 주 선점: ${userAlreadyBooked}개 / 남은 가능 수: ${userRemainingQuota}개 (이번 신청 최대 ${maxQuota}개 선택 가능)`;
+        }
+
+        days.forEach(day => {
+            const checkbox = document.querySelector(`input[name="bookingDay"][value="${day}"]`);
+            const card = document.getElementById(`daycard-${day}`);
+            const isBooked = !!bookings[day];
+
+            checkbox.checked = false;
+            card.classList.remove('selected');
+
+            if (isBooked || maxQuota === 0) {
+                checkbox.disabled = true;
+                card.classList.add('disabled');
+            } else {
+                checkbox.disabled = false;
+                card.classList.remove('disabled');
+            }
+        });
+    }
+
+    function handleDayToggle(checkbox) {
+        const bookings = getValidBookings();
+        const grade = document.getElementById('studentGrade').value;
+        const name = document.getElementById('studentName').value.trim();
+
+        if (!name) {
+            checkbox.checked = false;
+            alert("대표자 이름을 먼저 입력해 주세요.");
+            return;
+        }
+
+        const totalAvailableDays = 5 - Object.keys(bookings).length;
+        const userAlreadyBooked = getUserWeeklyBookingCount(grade, name);
+        const userRemainingQuota = Math.max(0, MAX_WEEKLY_PER_USER - userAlreadyBooked);
+        const maxQuota = Math.min(userRemainingQuota, totalAvailableDays);
+
+        if (checkbox.checked) {
+            const checkedCount = document.querySelectorAll('input[name="bookingDay"]:checked').length;
+            if (checkedCount > maxQuota) {
+                checkbox.checked = false;
+                alert(`이번 주 주간 신청 한도를 초과했습니다. (${name}님의 이번 신청 가능 수: 최대 ${maxQuota}개)`);
+                return;
+            }
+            checkbox.closest('.day-card').classList.add('selected');
+        } else {
+            checkbox.closest('.day-card').classList.remove('selected');
+        }
+    }
+
+    function makeReservation() {
+        const grade = document.getElementById('studentGrade').value;
+        const name = document.getElementById('studentName').value.trim();
+        const selectedDays = Array.from(document.querySelectorAll('input[name="bookingDay"]:checked')).map(el => el.value);
+
+        if (!name) {
+            alert("대표자 이름을 입력해주세요.");
+            return;
+        }
+
+        if (selectedDays.length === 0) {
+            alert("이용하실 요일을 최소 1개 이상 선택해주세요.");
+            return;
+        }
+
+        const bookings = getValidBookings();
+        const userAlreadyBooked = getUserWeeklyBookingCount(grade, name);
+
+        if (userAlreadyBooked + selectedDays.length > MAX_WEEKLY_PER_USER) {
+            alert(`[한도 초과] 일주일에 최대 ${MAX_WEEKLY_PER_USER}개 요일만 예약 가능합니다. (현재 이미 ${userAlreadyBooked}개 예약됨)`);
+            return;
+        }
+
+        const conflictDays = selectedDays.filter(day => bookings[day]);
+
+        document.getElementById('step-booking').classList.remove('active');
+        document.getElementById('step-result').classList.add('active');
+
+        const resultMsg = document.getElementById('resultMessage');
+        const statusDetails = document.getElementById('statusDetails');
+
+        if (conflictDays.length > 0) {
+            resultMsg.className = "message error";
+            resultMsg.innerText = "죄송합니다. 선택한 날짜 중 이미 예약된 요일이 있습니다.";
+            statusDetails.innerHTML = `
+                <strong>[예약 불가 안내]</strong><br>
+                - 선택하신 요일 중 <strong>${conflictDays.join(', ')}</strong>은(는) 선점되었습니다.<br>
+                - 현황판을 확인 후 다시 시도해 주세요.
+            `;
+        } else {
+            selectedDays.forEach(day => {
+                bookings[day] = { grade: grade, name: name };
+            });
+            saveBookings(bookings);
+
+            updateCalendarUI();
+
+            resultMsg.className = "message success";
+            resultMsg.innerText = "이번 주 예약 신청이 성공적으로 완료되었습니다.";
+
+            statusDetails.innerHTML = `
+                <strong>[예약 확인서]</strong><br>
+                - 주차 기준: ${getCurrentWeekKey()}<br>
+                - 학년 및 대표자: ${grade} (${name})<br>
+                - 신청 요일: ${selectedDays.join(', ')}<br>
+                - 이번 주 총 예약된 요일 수: ${userAlreadyBooked + selectedDays.length} / ${MAX_WEEKLY_PER_USER}개
+            `;
+        }
+    }
+
+    function cancelStudentReservation() {
+        const grade = document.getElementById('cancelGrade').value;
+        const name = document.getElementById('cancelName').value.trim();
+
+        if (!name) {
+            alert("대표자 이름을 입력해 주세요.");
+            return;
+        }
+
+        executeCancel(grade, name);
+    }
+
+    function executeCancel(grade, name) {
+        let bookings = getValidBookings();
+        let canceledDays = [];
+
+        for (let day of days) {
+            if (bookings[day] && bookings[day].grade === grade && bookings[day].name === name) {
+                canceledDays.push(day);
+                delete bookings[day];
+            }
+        }
+
+        if (canceledDays.length === 0) {
+            alert(`입력하신 정보(${grade}, 대표자: ${name})로 이번 주 등록된 예약을 찾을 수 없습니다.`);
+            return;
+        }
+
+        saveBookings(bookings);
+        updateCalendarUI();
+
+        document.getElementById('step-booking').classList.remove('active');
+        document.getElementById('step-result').classList.add('active');
+
+        const resultMsg = document.getElementById('resultMessage');
+        const statusDetails = document.getElementById('statusDetails');
+
+        resultMsg.className = "message success";
+        resultMsg.innerText = "예약이 성공적으로 취소되었습니다.";
+        statusDetails.innerHTML = `
+            <strong>[취소 내역 확인]</strong><br>
+            - 취소 학년: ${grade}<br>
+            - 대표자: ${name}<br>
+            - 해제된 요일: ${canceledDays.join(', ')}
+        `;
+    }
+
+    function assignTeacherSchedule() {
+        const targetDay = document.getElementById('teacherTargetDay').value;
+        const assignType = document.getElementById('teacherAssignType').value;
+
+        let bookings = getValidBookings();
+
+        if (bookings[targetDay]) {
+            const confirmOverwrite = confirm(`[${targetDay}]에 이미 등록된 예약 정보(${bookings[targetDay].grade})가 있습니다.\n'${assignType}'(으)로 덮어쓰시겠습니까?`);
+            if (!confirmOverwrite) return;
+        }
+
+        bookings[targetDay] = {
+            grade: assignType,
+            name: "교사 지정"
+        };
+
+        saveBookings(bookings);
+        updateCalendarUI();
+        renderTeacherBookingList();
+
+        alert(`[${targetDay}]이(가) '${assignType}'(으)로 지정 등록되었습니다.`);
+    }
+
+    function resetSystemData() {
+        if (confirm("정말 이번 주 모든 예약 기록을 삭제하시겠습니까?")) {
+            saveBookings({});
+            updateCalendarUI();
+            renderTeacherBookingList();
+            alert("이번 주 모든 예약 정보가 정상적으로 초기화되었습니다.");
+            goToInitialScreen();
+        }
+    }
+
+    function openSettingsScreen() {
+        const settings = JSON.parse(localStorage.getItem('systemSettings'));
+        document.getElementById('cfgSchoolName').value = settings.schoolName;
+        document.getElementById('cfgSubtitle').value = settings.subtitle;
+        document.getElementById('cfgTheme').value = settings.theme;
+        document.getElementById('cfgResetMode').value = settings.resetMode;
+
+        document.getElementById('step-teacher-admin').classList.remove('active');
+        document.getElementById('step-settings').classList.add('active');
+    }
+
+    function closeSettingsScreen() {
+        document.getElementById('step-settings').classList.remove('active');
+        document.getElementById('step-teacher-admin').classList.add('active');
+    }
+
+    function saveSystemSettings() {
+        const newSettings = {
+            schoolName: document.getElementById('cfgSchoolName').value.trim() || "카이스트 중학교 운동장 예약",
+            subtitle: document.getElementById('cfgSubtitle').value.trim() || "모두가 공정하게 이용하는 열린 운동장",
+            theme: document.getElementById('cfgTheme').value,
+            resetMode: document.getElementById('cfgResetMode').value
+        };
+
+        localStorage.setItem('systemSettings', JSON.stringify(newSettings));
+        applySystemSettings();
+        alert("설정이 성공적으로 저장되었습니다!");
+        closeSettingsScreen();
+    }
+</script>
+
+</body>
+</html>

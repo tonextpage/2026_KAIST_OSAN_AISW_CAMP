@@ -1,0 +1,384 @@
+/* ==========================================================
+   Team Header
+========================================================== */
+
+#team-header{
+
+    margin-top:20px;
+    margin-bottom:60px;
+
+}
+
+.team-title{
+
+    font-size:3rem;
+    font-weight:800;
+    letter-spacing:-1px;
+    margin-bottom:10px;
+
+}
+
+.team-subtitle{
+
+    font-size:1.2rem;
+    color:#666;
+    margin-bottom:20px;
+
+}
+
+.team-description{
+
+    max-width:900px;
+    color:#555;
+    line-height:1.8;
+}
+
+.team-actions{
+
+    margin-top:30px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+
+/* ==========================================================
+   Section
+========================================================== */
+
+.section-title{
+
+    font-size:2rem;
+    font-weight:700;
+    margin-bottom:24px;
+
+}
+
+
+/* ==========================================================
+   Poster Showcase
+========================================================== */
+
+#poster-container{
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+}
+
+.poster-frame{
+
+    width:min(100%,900px);
+
+    background:white;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.15);
+
+    transition:
+        transform .35s,
+        box-shadow .35s;
+
+}
+
+.poster-frame:hover{
+
+    transform:
+        translateY(-6px);
+
+    box-shadow:
+        0 28px 70px rgba(0,0,0,.22);
+
+}
+
+.poster-image{
+
+    display:block;
+
+    width:100%;
+
+    cursor:zoom-in;
+
+}
+
+.poster-pdf{
+
+    width:100%;
+
+    height:900px;
+
+    border:none;
+
+}
+
+
+/* ==========================================================
+   Demo
+========================================================== */
+
+#project-container{
+
+    background:white;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 12px 40px rgba(0,0,0,.12);
+
+}
+
+.project-frame{
+
+    width:100%;
+
+    height:820px;
+
+    border:none;
+
+    background:white;
+
+}
+
+.project-empty{
+
+    padding:80px 30px;
+
+    text-align:center;
+
+    color:#777;
+
+}
+
+.project-empty i{
+
+    font-size:4rem;
+
+    display:block;
+
+    margin-bottom:20px;
+
+    color:#bbb;
+
+}
+
+
+/* ==========================================================
+   Members
+========================================================== */
+
+#member-container{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:12px;
+
+}
+
+.member-chip{
+
+    background:#eef3ff;
+
+    color:#0d6efd;
+
+    border-radius:999px;
+
+    padding:
+
+        10px 18px;
+
+    font-weight:600;
+
+}
+
+
+/* ==========================================================
+   Buttons
+========================================================== */
+
+.btn-github{
+
+    background:#24292f;
+
+    color:white;
+
+    border:none;
+
+}
+
+.btn-github:hover{
+
+    background:#111;
+
+    color:white;
+
+}
+
+
+/* ==========================================================
+   Responsive
+========================================================== */
+
+@media (max-width:992px){
+
+    .team-title{
+
+        font-size:2.4rem;
+
+    }
+
+    .poster-pdf{
+
+        height:720px;
+
+    }
+
+    .project-frame{
+
+        height:700px;
+
+    }
+
+}
+
+@media (max-width:768px){
+
+    .team-title{
+
+        font-size:2rem;
+
+    }
+
+    .section-title{
+
+        font-size:1.6rem;
+
+    }
+
+    .poster-pdf{
+
+        height:600px;
+
+    }
+
+    .project-frame{
+
+        height:600px;
+
+    }
+
+}
+
+@media (max-width:576px){
+
+    .team-actions{
+
+        flex-direction:column;
+
+    }
+
+    .team-actions .btn{
+
+        width:100%;
+
+    }
+
+    .poster-pdf{
+
+        height:500px;
+
+    }
+
+    .project-frame{
+
+        height:500px;
+
+    }
+
+    .member-chip{
+
+        width:100%;
+
+        text-align:center;
+
+    }
+
+}
+
+/* ==========================================================
+   Lightbox
+========================================================== */
+
+.poster-lightbox{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.88);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    opacity:0;
+
+    transition:.2s;
+
+    z-index:5000;
+
+}
+
+.poster-lightbox.show{
+
+    opacity:1;
+
+}
+
+.poster-lightbox-image{
+
+    max-width:92vw;
+
+    max-height:92vh;
+
+    border-radius:12px;
+
+    box-shadow:
+
+        0 20px 60px rgba(0,0,0,.5);
+
+}
+
+.poster-lightbox-close{
+
+    position:absolute;
+
+    top:25px;
+
+    right:25px;
+
+    width:52px;
+
+    height:52px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:white;
+
+    cursor:pointer;
+
+    font-size:1.3rem;
+
+}

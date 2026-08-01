@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>면허증 얼굴 인증</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a; color: #e2e8f0;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding: 16px;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 6px; }
+    .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 18px; text-align: center; }
+    #status {
+      background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+      padding: 14px 16px; width: 100%; max-width: 480px; margin-bottom: 16px;
+      white-space: pre-wrap; font-size: 0.92rem; line-height: 1.45; min-height: 70px;
+    }
+    .video-wrap {
+      width: 100%; max-width: 420px; aspect-ratio: 4/3; background: #000;
+      border-radius: 14px; overflow: hidden; border: 2px solid #334155; margin-bottom: 14px;
+    }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    canvas { display: none; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px; }
+    button {
+      background: #3b82f6; color: white; border: none; padding: 13px 22px;
+      border-radius: 11px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    button:hover:not(:disabled) { background: #2563eb; }
+    button:disabled { background: #475569; cursor: not-allowed; opacity: 0.65; }
+    button.capture { background: #22c55e; font-size: 1.05rem; padding: 14px 32px; }
+    button.capture:hover:not(:disabled) { background: #16a34a; }
+    .result-box {
+      width: 100%; max-width: 480px; background: #1e293b; border: 1px solid #334155;
+      border-radius: 12px; padding: 18px; display: none;
+    }
+    .result-box.show { display: block; }
+    .score { font-size: 2rem; font-weight: 700; margin: 10px 0; }
+    .pass { color: #4ade80; }
+    .fail { color: #f87171; }
+    .ocr-box {
+      background: #0f172a; border-radius: 8px; padding: 10px; margin-top: 12px;
+      font-family: monospace; font-size: 0.8rem; max-height: 140px;
+      overflow-y: auto; white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛴 면허증 얼굴 인증</h1>
+  <p class="subtitle">1. 면허증 촬영 → 2. 본인 얼굴 촬영 → 일치율 비교</p>
+
+  <div id="status">라이브러리 로딩 중...</div>
+
+  <div class="video-wrap">
+    <video id="video" autoplay muted playsinline></video>
+  </div>
+  <canvas id="canvas"></canvas>
+
+  <div class="btn-row">
+    <button id="btnLicense" disabled>1. 면허증 준비</button>
+    <button id="btnLive" disabled>2. 본인 얼굴 준비</button>
+    <button id="btnCapture" class="capture" disabled style="display:none;">📸 촬영하기</button>
+    <button id="btnReset" disabled>처음부터</button>
+  </div>
+
+  <div id="resultBox" class="result-box">
+    <div id="resultTitle"></div>
+    <div id="resultScore" class="score"></div>
+    <div id="resultMsg"></div>
+    <div id="ocrResult" class="ocr-box" style="display:none;"></div>
+  </div>
+
+  <script>
+    // =====================================================
+    // 1. Dynamically load face-api (with fallbacks)
+    // =====================================================
+    const FACEAPI_CDNS = [
+      'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js',
+      'https://unpkg.com/@vladmandic/face-api@1.7.15/dist/face-api.js',
+      'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js'
+    ];
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = false;           // keep order
+        s.onload = () => resolve(src);
+        s.onerror = () => reject(new Error('Failed to load ' + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function loadFaceApi() {
+      for (const url of FACEAPI_CDNS) {
+        try {
+          log('라이브러리 시도: ' + url.split('/').pop());
+          await loadScript(url);
+
+          // Wait until the global is actually available
+          for (let i = 0; i < 50; i++) {
+            if (typeof window.faceapi !== 'undefined') {
+              log('✅ faceapi 라이브러리 로드 성공');
+              return true;
+            }
+            await new Promise(r => setTimeout(r, 100));
+          }
+          throw new Error('faceapi global not found after script load');
+        } catch (err) {
+          console.warn(err);
+          log('이 CDN 실패 → 다음 시도...');
+        }
+      }
+      return false;
+    }
+
+    // =====================================================
+    // 2. App state & helpers
+    // =====================================================
+    let stream = null;
+    let licenseDescriptor = null;
+    let liveDescriptor = null;
+    let currentMode = null; // 'license' | 'live'
+
+    const video      = document.getElementById('video');
+    const canvas     = document.getElementById('canvas');
+    const statusEl   = document.getElementById('status');
+    const btnLicense = document.getElementById('btnLicense');
+    const btnLive    = document.getElementById('btnLive');
+    const btnCapture = document.getElementById('btnCapture');
+    const btnReset   = document.getElementById('btnReset');
+    const resultBox  = document.getElementById('resultBox');
+
+    function log(msg) {
+      statusEl.textContent = msg;
+      console.log(msg);
+    }
+
+    function euclideanDistance(a, b) {
+      let sum = 0;
+      for (let i = 0; i < a.length; i++) {
+        const d = a[i] - b[i];
+        sum += d * d;
+      }
+      return Math.sqrt(sum);
+    }
+
+    // =====================================================
+    // 3. Load models (only after faceapi exists)
+    // =====================================================
+    async function loadModels() {
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
+
+      log('📌 얼굴 인식 모델 로딩 중...\n(처음에는 10~20초 걸릴 수 있습니다)');
+
+      try {
+        await faceapi.nets.ssdMobilenetv1.load(MODEL_URL);
+        log('✓ 얼굴 검출 모델 완료');
+        await faceapi.nets.faceLandmark68Net.load(MODEL_URL);
+        log('✓ 랜드마크 모델 완료');
+        await faceapi.nets.faceRecognitionNet.load(MODEL_URL);
+        log('✓ 얼굴 인식 모델 완료');
+
+        log('✅ 모든 준비 완료!\n\n👉 [1. 면허증 준비] 버튼을 누르세요.');
+        btnLicense.disabled = false;
+        btnReset.disabled = false;
+      } catch (err) {
+        log('❌ 모델 로딩 실패:\n' + err.message);
+        console.error(err);
+      }
+    }
+
+    // =====================================================
+    // 4. Camera helpers
+    // =====================================================
+    async function startCamera(facingMode) {
+      try {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+        return true;
+      } catch (err) {
+        log('❌ 카메라 접근 실패: ' + err.message +
+            '\n주소창 왼쪽의 카메라 권한을 허용해주세요.');
+        return false;
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      video.srcObject = null;
+    }
+
+    function captureFrame() {
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      return canvas;
+    }
+
+    async function getFaceDescriptor(input) {
+      const detection = await faceapi
+        .detectSingleFace(input)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      return detection ? detection.descriptor : null;
+    }
+
+    async function runOCR(input) {
+      log('🔍 OCR 텍스트 추출 중...');
+      try {
+        const result = await Tesseract.recognize(input, 'kor+eng', {
+          logger: m => {
+            if (m.status === 'recognizing text') {
+              log(`🔍 OCR 진행률: ${Math.round(m.progress * 100)}%`);
+            }
+          }
+        });
+        return result.data.text.trim() || '(텍스트를 인식하지 못했습니다)';
+      } catch (e) {
+        return 'OCR 오류: ' + e.message;
+      }
+    }
+
+    // =====================================================
+    // 5. Steps
+    // =====================================================
+    async function prepareLicense() {
+      resultBox.classList.remove('show');
+      btnLive.disabled = true;
+      btnCapture.style.display = 'none';
+
+      const ok = await startCamera('environment');
+      if (!ok) return;
+
+      currentMode = 'license';
+      btnCapture.style.display = 'inline-block';
+      btnCapture.disabled = false;
+      log('👉 카메라에 면허증을 선명하게 비추고\n[📸 촬영하기] 버튼을 누르세요.');
+    }
+
+    async function prepareLive() {
+      if (!licenseDescriptor) {
+        log('먼저 면허증을 촬영해야 합니다.');
+        return;
+      }
+      const ok = await startCamera('user');
+      if (!ok) return;
+
+      currentMode = 'live';
+      btnCapture.style.display = 'inline-block';
+      btnCapture.disabled = false;
+      log('👉 카메라를 바르게 바라보고\n[📸 촬영하기] 버튼을 누르세요.');
+    }
+
+    async function doCapture() {
+      if (!currentMode) return;
+      btnCapture.disabled = true;
+
+      const frame = captureFrame();
+      stopCamera();
+      btnCapture.style.display = 'none';
+
+      if (currentMode === 'license') {
+        const ocrText = await runOCR(frame);
+        document.getElementById('ocrResult').style.display = 'block';
+        document.getElementById('ocrResult').textContent = ocrText;
+
+        log('👤 면허증 얼굴 특징 추출 중...');
+        const desc = await getFaceDescriptor(frame);
+
+        if (!desc) {
+          log('⚠️ 면허증에서 얼굴을 찾지 못했습니다.\n다시 시도하세요.');
+          btnLicense.disabled = false;
+          return;
+        }
+        licenseDescriptor = desc;
+        log('✅ 면허증 얼굴 인식 성공!\n\n--- OCR 결과 ---\n' + ocrText +
+            '\n\n👉 이제 [2. 본인 얼굴 준비] 버튼을 누르세요.');
+        btnLive.disabled = false;
+
+      } else if (currentMode === 'live') {
+        log('👤 본인 얼굴 특징 추출 중...');
+        const desc = await getFaceDescriptor(frame);
+
+        if (!desc) {
+          log('⚠️ 얼굴을 찾을 수 없습니다. 다시 시도하세요.');
+          btnLive.disabled = false;
+          return;
+        }
+        liveDescriptor = desc;
+        log('✅ 본인 얼굴 인식 성공! 일치율을 계산합니다...');
+        compareFaces();
+      }
+      currentMode = null;
+    }
+
+    function compareFaces() {
+      const dist = euclideanDistance(licenseDescriptor, liveDescriptor);
+      const similarity = Math.max(0, Math.min(100, (1.0 - dist) * 100));
+
+      resultBox.classList.add('show');
+      const title = document.getElementById('resultTitle');
+      const score = document.getElementById('resultScore');
+      const msg   = document.getElementById('resultMsg');
+
+      score.textContent = similarity.toFixed(2) + '%';
+
+      if (similarity >= 60) {
+        title.textContent = '🎉 인증 성공';
+        score.className = 'score pass';
+        msg.textContent = '60% 이상 일치! 킥보드 잠금이 해제되었습니다 🛴';
+        log(`📊 얼굴 일치율: ${similarity.toFixed(2)}%\n🎉 [인증 성공]`);
+      } else {
+        title.textContent = '⛔ 인증 실패';
+        score.className = 'score fail';
+        msg.textContent = '일치율이 60% 미만입니다. 본인 인증 실패.';
+        log(`📊 얼굴 일치율: ${similarity.toFixed(2)}%\n⛔ [인증 실패]`);
+      }
+      btnLicense.disabled = false;
+      btnLive.disabled = false;
+    }
+
+    function resetAll() {
+      stopCamera();
+      licenseDescriptor = null;
+      liveDescriptor = null;
+      currentMode = null;
+      resultBox.classList.remove('show');
+      document.getElementById('ocrResult').style.display = 'none';
+      btnCapture.style.display = 'none';
+      btnLive.disabled = true;
+      btnLicense.disabled = false;
+      log('✅ 초기화 완료.\n👉 [1. 면허증 준비] 버튼을 누르세요.');
+    }
+
+    // =====================================================
+    // 6. Events & start
+    // =====================================================
+    btnLicense.addEventListener('click', prepareLicense);
+    btnLive.addEventListener('click', prepareLive);
+    btnCapture.addEventListener('click', doCapture);
+    btnReset.addEventListener('click', resetAll);
+
+    // Main entry
+    (async function main() {
+      const ok = await loadFaceApi();
+      if (!ok) {
+        log('❌ faceapi 라이브러리를 어떤 CDN에서도 불러오지 못했습니다.\n' +
+            '인터넷 연결을 확인하거나, 다른 네트워크에서 시도해보세요.');
+        return;
+      }
+      // Now faceapi is guaranteed to exist
+      await loadModels();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>쉬운 로그인/로그아웃 도우미</title>
+
+  <!--
+    Colab/Python의 argon2-cffi를 브라우저에서 사용할 수 없기 때문에
+    브라우저용 Argon2id 구현(hash-wasm)을 사용합니다.
+    인터넷 연결이 필요합니다.
+  -->
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .assistant-container,
+    #passwordGate {
+      max-width: 700px;
+      width: 100%;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+
+    #mainContent {
+      width: min(700px, 100%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .search,
+    .password-input {
+      width: 100%;
+      padding: 18px;
+      font-size: 20px;
+      border: 2px solid #ddd;
+      border-radius: 15px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .search:focus,
+    .password-input:focus {
+      border-color: #4285f4;
+    }
+
+    .site-info {
+      margin-top: 20px;
+      padding: 20px 0;
+      display: none;
+    }
+
+    .site-info h2 {
+      margin-top: 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 10px;
+      border: 0;
+      border-radius: 10px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .login-btn {
+      background: #4285f4;
+      color: white;
+    }
+
+    .logout-btn {
+      background: #dc3545;
+      color: white;
+    }
+
+    .open-btn {
+      background: #eee;
+    }
+
+    #passwordSubmitBtn {
+      background: #28a745;
+      color: white;
+    }
+
+    .notice {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    #passwordError {
+      color: #c62828;
+      text-align: center;
+      display: none;
+    }
+
+    .security-warning {
+      background: #fff4d6;
+      color: #6b5200;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Password Gate -->
+  <div id="passwordGate">
+    <h1>🔒 접근을 위해 비밀번호를 입력하세요</h1>
+
+    <p class="description">
+      서비스 사용을 위해 비밀번호를 입력해 주세요.
+    </p>
+
+    <div class="security-warning">
+      ⚠️ 이 HTML 파일은 비밀번호 검증을 브라우저에서 수행합니다.
+      실제 서비스의 보안 인증에는 서버 측 검증을 사용하세요.
+    </div>
+
+    <input
+      id="passwordInput"
+      class="password-input"
+      type="password"
+      placeholder="비밀번호를 입력하세요"
+      autocomplete="off"
+    >
+
+    <button id="passwordSubmitBtn">
+      ✅ 확인
+    </button>
+
+    <p id="passwordError" class="notice">
+      잘못된 비밀번호입니다. 다시 시도해 주세요.
+    </p>
+  </div>
+
+
+  <!-- Main Content -->
+  <div id="mainContent">
+
+    <!-- Login Assistant -->
+    <div class="assistant-container">
+      <h1>🔐 쉬운 로그인 도우미</h1>
+
+      <p class="description">
+        로그인하려는 사이트를 검색하세요.
+      </p>
+
+      <input
+        id="searchLogin"
+        class="search"
+        type="search"
+        placeholder="예: Google, 네이버, Instagram"
+        autocomplete="off"
+      >
+
+      <div id="resultLogin" class="site-info">
+        <h2 id="siteNameLogin"></h2>
+
+        <button id="loginButton" class="login-btn">
+          🔐 저장된 계정으로 로그인
+        </button>
+
+        <button id="openButtonLogin" class="open-btn">
+          🌐 사이트 열기
+        </button>
+
+        <p class="notice">
+          비밀번호를 이 서비스에 저장하지 않습니다.
+          <br>
+          로그인 정보는 브라우저의 비밀번호 관리자 또는
+          해당 사이트의 공식 로그인 기능을 이용합니다.
+        </p>
+      </div>
+    </div>
+
+
+    <!-- Logout Assistant -->
+    <div class="assistant-container">
+      <h1>🚪 쉬운 로그아웃 도우미</h1>
+
+      <p class="description">
+        로그아웃하려는 사이트를 검색하세요.
+      </p>
+
+      <input
+        id="searchLogout"
+        class="search"
+        type="search"
+        placeholder="예: Google, 네이버, Instagram"
+        autocomplete="off"
+      >
+
+      <div id="resultLogout" class="site-info">
+        <h2 id="siteNameLogout"></h2>
+
+        <button id="logoutButton" class="logout-btn">
+          🚪 로그아웃
+        </button>
+
+        <button id="openButtonLogout" class="open-btn">
+          🌐 사이트 열기
+        </button>
+
+        <p class="notice">
+          이 도우미는 해당 사이트의 공식 로그아웃 기능을 이용합니다.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+
+<script type="module">
+
+/*
+ * ============================================================
+ * Python / Colab 코드와 동일한 핵심 로직
+ * ============================================================
+ *
+ * 기존 Colab:
+ *   ph.verify(hashed_password, password_input)
+ *
+ * 변경:
+ *   hash-wasm의 argon2Verify({ password, hash })
+ *
+ * Argon2id PHC 문자열 자체는 기존 코드의 값을 그대로 사용합니다.
+ *
+ * 주의:
+ * 이 값이 HTML에 들어가므로 실제 서비스용 비밀번호 인증에는
+ * 사용하지 마세요. 누구나 HTML을 열어 해시를 가져갈 수 있습니다.
+ */
+
+import { argon2Verify } from
+  "https://cdn.jsdelivr.net/npm/hash-wasm@4.12.0/+esm";
+
+
+const hashedPassword =
+  "$argon2id$v=19$m=65536,t=3,p=4$3LTIIjgY+XSHs48+eOuRCg$e/1azC6CzSIUMBvVSosw/LB4G7Y/jXAZrP8/WlvJ2NM";
+
+
+/* ------------------------------------------------------------
+   Password Gate
+------------------------------------------------------------ */
+
+const passwordInput =
+  document.getElementById("passwordInput");
+
+const passwordSubmitBtn =
+  document.getElementById("passwordSubmitBtn");
+
+const passwordGate =
+  document.getElementById("passwordGate");
+
+const mainContent =
+  document.getElementById("mainContent");
+
+const passwordError =
+  document.getElementById("passwordError");
+
+
+async function verifyPassword(password) {
+
+  return await argon2Verify({
+    password: password,
+    hash: hashedPassword
+  });
+
+}
+
+
+async function checkPassword() {
+
+  passwordError.style.display = "none";
+
+  const password =
+    passwordInput.value;
+
+  if (password.length === 0) {
+
+    passwordError.textContent =
+      "비밀번호를 입력해 주세요.";
+
+    passwordError.style.display =
+      "block";
+
+    return;
+  }
+
+  passwordSubmitBtn.disabled = true;
+  passwordSubmitBtn.textContent =
+    "🔐 확인 중...";
+
+  try {
+
+    const isValid =
+      await verifyPassword(password);
+
+    if (isValid) {
+
+      passwordGate.style.display =
+        "none";
+
+      mainContent.style.display =
+        "flex";
+
+    } else {
+
+      passwordError.textContent =
+        "잘못된 비밀번호입니다. 다시 시도해 주세요.";
+
+      passwordError.style.display =
+        "block";
+
+      passwordInput.value = "";
+
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    passwordError.textContent =
+      "보안 모듈을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.";
+
+    passwordError.style.display =
+      "block";
+
+  } finally {
+
+    passwordSubmitBtn.disabled = false;
+    passwordSubmitBtn.textContent =
+      "✅ 확인";
+
+  }
+}
+
+
+passwordSubmitBtn.addEventListener(
+  "click",
+  checkPassword
+);
+
+
+passwordInput.addEventListener(
+  "keydown",
+  function(event) {
+
+    if (event.key === "Enter") {
+      checkPassword();
+    }
+
+  }
+);
+
+
+/* ------------------------------------------------------------
+   Login Assistant
+------------------------------------------------------------ */
+
+const loginSites = {
+
+  google: {
+    name: "Google",
+    url: "https://accounts.google.com/"
+  },
+
+  네이버: {
+    name: "네이버",
+    url: "https://nid.naver.com/"
+  },
+
+  naver: {
+    name: "네이버",
+    url: "https://nid.naver.com/"
+  },
+
+  instagram: {
+    name: "Instagram",
+    url: "https://www.instagram.com/accounts/login/"
+  },
+
+  facebook: {
+    name: "Facebook",
+    url: "https://www.facebook.com/login/"
+  }
+
+};
+
+
+const searchLogin =
+  document.getElementById("searchLogin");
+
+const resultLogin =
+  document.getElementById("resultLogin");
+
+const siteNameLogin =
+  document.getElementById("siteNameLogin");
+
+const loginButton =
+  document.getElementById("loginButton");
+
+const openButtonLogin =
+  document.getElementById("openButtonLogin");
+
+
+let selectedLoginSite = null;
+
+
+searchLogin.addEventListener(
+  "input",
+  function() {
+
+    const keyword =
+      searchLogin.value
+        .trim()
+        .toLowerCase();
+
+    selectedLoginSite =
+      loginSites[keyword];
+
+    if (!selectedLoginSite) {
+
+      resultLogin.style.display =
+        "none";
+
+      return;
+    }
+
+    siteNameLogin.textContent =
+      selectedLoginSite.name;
+
+    resultLogin.style.display =
+      "block";
+
+  }
+);
+
+
+function openLoginSite() {
+
+  if (!selectedLoginSite) {
+    return;
+  }
+
+  window.open(
+    selectedLoginSite.url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+
+}
+
+
+openButtonLogin.addEventListener(
+  "click",
+  openLoginSite
+);
+
+loginButton.addEventListener(
+  "click",
+  openLoginSite
+);
+
+
+/* ------------------------------------------------------------
+   Logout Assistant
+------------------------------------------------------------ */
+
+const logoutSites = {
+
+  google: {
+    name: "Google",
+    url: "https://accounts.google.com/logout"
+  },
+
+  네이버: {
+    name: "네이버",
+    url: "https://nid.naver.com/nidlogin.logout"
+  },
+
+  naver: {
+    name: "네이버",
+    url: "https://nid.naver.com/nidlogin.logout"
+  },
+
+  instagram: {
+    name: "Instagram",
+    url: "https://www.instagram.com/accounts/logout/"
+  },
+
+  facebook: {
+    name: "Facebook",
+    url: "https://www.facebook.com/logout.php"
+  }
+
+};
+
+
+const searchLogout =
+  document.getElementById("searchLogout");
+
+const resultLogout =
+  document.getElementById("resultLogout");
+
+const siteNameLogout =
+  document.getElementById("siteNameLogout");
+
+const logoutButton =
+  document.getElementById("logoutButton");
+
+const openButtonLogout =
+  document.getElementById("openButtonLogout");
+
+
+let selectedLogoutSite = null;
+
+
+searchLogout.addEventListener(
+  "input",
+  function() {
+
+    const keyword =
+      searchLogout.value
+        .trim()
+        .toLowerCase();
+
+    selectedLogoutSite =
+      logoutSites[keyword];
+
+    if (!selectedLogoutSite) {
+
+      resultLogout.style.display =
+        "none";
+
+      return;
+    }
+
+    siteNameLogout.textContent =
+      selectedLogoutSite.name;
+
+    resultLogout.style.display =
+      "block";
+
+  }
+);
+
+
+function openLogoutSite() {
+
+  if (!selectedLogoutSite) {
+    return;
+  }
+
+  window.open(
+    selectedLogoutSite.url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+
+}
+
+
+openButtonLogout.addEventListener(
+  "click",
+  openLogoutSite
+);
+
+logoutButton.addEventListener(
+  "click",
+  openLogoutSite
+);
+
+</script>
+
+</body>
+</html>
